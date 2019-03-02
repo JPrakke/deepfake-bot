@@ -1,2 +1,2 @@
-discord.py==1.0.5
+discord.py==0.16.12
 textgenrnn==1.5
