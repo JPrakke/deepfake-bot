@@ -1,6 +1,6 @@
-# Doppelganger Bot
+# DeepfakeBot
 
-Doppelganger is a discord bot that can be trained to mimic other users. He will also run some analysis on your target user and upload figures to discord.
+A discord bot that can be trained to mimic other users. It will also run some analysis on your subject and upload figures to discord.
 
 ## Folders
 
@@ -10,4 +10,4 @@ Doppelganger is a discord bot that can be trained to mimic other users. He will 
 
 ## Links
 
-To be continued...
+[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) DeepfakeBot to your server.

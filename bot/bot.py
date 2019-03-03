@@ -1,7 +1,7 @@
 import os, random, asyncio
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix="dp!")
+bot = commands.Bot(command_prefix="df!")
 
 @bot.event
 @asyncio.coroutine
@@ -40,5 +40,5 @@ async def train(ctx, user_mention):
     await bot.send_message(channel, "Not yet implimented...")
 
 
-token = os.environ.get('DPPL_TOKEN')
+token = os.environ.get('DISCORD_TOKEN')
 bot.run(token)
