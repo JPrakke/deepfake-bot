@@ -1,5 +1,6 @@
 import os, random, asyncio
 from discord.ext import commands
+import extract, config
 
 bot = commands.Bot(command_prefix="df!")
 
@@ -21,10 +22,9 @@ async def repeat(ctx, msg):
 @bot.command(pass_context=True)
 async def get_user_logs(ctx, user_mention):
     """Prototype function for testing. Print out the last 500 messages from the mentioned user."""
-    channel = ctx.message.channel
-    async for message in bot.logs_from(channel, limit=500):
-        if message.author.mention == user_mention:
-            print(message.content)
+    bot.loop.create_task(
+        extract.extract_user_chats(ctx, user_mention, bot)
+    )
 
 @bot.command(pass_context=True)
 async def analyze(ctx, user_mention):
@@ -40,5 +40,5 @@ async def train(ctx, user_mention):
     await bot.send_message(channel, "Not yet implimented...")
 
 
-token = os.environ.get('DISCORD_TOKEN')
+token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
 bot.run(token)
