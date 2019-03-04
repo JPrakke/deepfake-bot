@@ -12,7 +12,7 @@ async def extract_user_chats(ctx, user_mention, bot):
 
     start_time = dt.datetime.now()
     print(f'Extracting chat history for {user_mention}...')
-    with gzip.open('./tmp/' + file_name, 'wb') as f:
+    with gzip.open('../tmp/' + file_name, 'wb') as f:
         async for message in bot.logs_from(channel, after=dt.datetime.now() - dt.timedelta(30)):
             if message.author.mention == user_mention:
                 result = str(
@@ -34,4 +34,4 @@ def upload_to_s3(file_name):
                         aws_access_key_id=config.aws_access_key_id,
                         aws_secret_access_key=config.aws_secret_access_key)
 
-    s3.Object(config.aws_s3_bucket_prefix, file_name).upload_file(f'./tmp/{file_name}')
+    s3.Object(config.aws_s3_bucket_prefix, file_name).upload_file(f'../tmp/{file_name}')
