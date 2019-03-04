@@ -1,6 +1,10 @@
-import os, random, asyncio
+import os
+import asyncio
+import pymongo
 from discord.ext import commands
-import extract, config
+import extract
+import config
+import queries
 
 bot = commands.Bot(command_prefix="df!")
 
@@ -11,6 +15,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    queries.query1()
 
 @bot.command(pass_context=True)
 async def repeat(ctx, msg):
@@ -38,7 +43,6 @@ async def train(ctx, user_mention):
     """Trains a model based on mentioned user. Must run analyze first."""
     channel = ctx.message.channel
     await bot.send_message(channel, "Not yet implimented...")
-
 
 token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
 bot.run(token)
