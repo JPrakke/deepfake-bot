@@ -1,4 +1,5 @@
 discord.py==0.16.12
 textgenrnn==1.5
 boto3==1.9.106
-pymongo==3.7.2
+sqlalchemy==1.3.0
+ 

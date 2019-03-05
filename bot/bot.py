@@ -1,9 +1,7 @@
 import os
 import asyncio
-import pymongo
 from discord.ext import commands
 import extract
-import config
 import queries
 
 bot = commands.Bot(command_prefix="df!")
