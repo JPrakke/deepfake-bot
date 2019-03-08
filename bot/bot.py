@@ -41,7 +41,7 @@ async def analyze(ctx, subject_string):
             subject = utils.get(found_members)
 
             bot.loop.create_task(
-                extract.extract_user_chats(ctx, subject, bot)
+                extract.extract_and_analyze(ctx, subject, bot)
             )
 
         except IndexError:
