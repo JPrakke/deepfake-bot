@@ -44,7 +44,7 @@ async def extract_and_analyze(ctx, user_mention, bot):
             f.write(f'{channels[i]},{message_counters[i]}\n'.encode())
 
     end_time = dt.datetime.now()
-    print(f'{message_counter} messages extracted.')
+    print(f'{sum(message_counters)} messages extracted.')
     print(f'Logs copied to tmp folder. Time elapsed = {end_time - start_time}')
 
     # S3
