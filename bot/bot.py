@@ -5,6 +5,7 @@ import extract
 import queries
 import botutils
 import plot_wordcloud
+import plot_activity
 
 bot = commands.Bot(command_prefix='df!')
 
@@ -34,6 +35,7 @@ async def analyze(ctx, *subject_string):
     queries.register_if_not_already(ctx)
     subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'analyze')
     if subject:
+        await bot.send_message(ctx.message.channel, f'Analyzing {subject.name}...')
         bot.loop.create_task(
             extract.extract_and_analyze(ctx, subject, bot)
         )
@@ -51,12 +53,44 @@ async def wordcloud(ctx, *subject_string):
         data_id = queries.get_latest_dataset(ctx, subject)
         if not data_id:
             await bot.send_message(ctx.message.channel,
-                                   f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
+                                   f'I can\'t find a data set for {subject_string[0]}. Try: `df!analyze User#0000` first')
         else:
-            plot_wordcloud.generate(data_id)
-            await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite words:')
-            await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-word-cloud.png')
-            os.remove(f'../tmp/{data_id}-word-cloud.png')
+            _, file_name = plot_wordcloud.generate(data_id)
+            await bot.send_message(ctx.message.channel, f'Here are {subject_string[0]}\'s favorite words:')
+            await bot.send_file(ctx.message.channel, file_name)
+            os.remove(file_name)
+    else:
+        await bot.send_message(ctx.message.channel, error_message)
+
+
+@bot.command(pass_context=True)
+async def activity(ctx, *subject_string):
+    """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
+
+    queries.register_if_not_already(ctx)
+    subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'activity')
+    if subject:
+        data_id = queries.get_latest_dataset(ctx, subject)
+        if not data_id:
+            await bot.send_message(ctx.message.channel,
+                                   f'I can\'t find a data set for {subject_string[0]}. Try: `df!analyze User#0000` first')
+        else:
+            file_name = plot_activity.generate(data_id, subject.name)
+            await bot.send_file(ctx.message.channel, file_name)
+            os.remove(file_name)
+
+            bar_file_name, bar_file_name_log = plot_activity.bar_charts(data_id, subject.name)
+
+            # Only make bar charts if more than one channel
+            if bar_file_name and bar_file_name_log:
+                await bot.send_file(ctx.message.channel, bar_file_name)
+                await bot.send_file(ctx.message.channel, bar_file_name_log)
+                os.remove(bar_file_name)
+                os.remove(bar_file_name_log)
+                await bot.send_message(ctx.message.channel,
+                                   """Don\'t see a channel? Make sure I have permission to read 
+it before running `df!analyze`.""")
+
     else:
         await bot.send_message(ctx.message.channel, error_message)
 
@@ -71,16 +105,16 @@ async def dirtywordcloud(ctx, *subject_string):
         data_id = queries.get_latest_dataset(ctx, subject)
         if not data_id:
             await bot.send_message(ctx.message.channel,
-                                   f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
+                                   f'I can\'t find a data set for {subject_string[0]}. Try: `df!analyze User#0000` first')
         else:
-            user_swears = plot_wordcloud.generate(data_id, True)
+            user_swears, file_name = plot_wordcloud.generate(data_id, True)
             if user_swears:
-                await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite curse words:')
-                await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-dirty-word-cloud.png')
-                os.remove(f'../tmp/{data_id}-dirty-word-cloud.png')
+                await bot.send_message(ctx.message.channel, f'Here are {subject_string[0]}\'s favorite curse words:')
+                await bot.send_file(ctx.message.channel, file_name)
+                os.remove(file_name)
                 await bot.send_message(ctx.message.channel, 'What a potty mouth!')
             else:
-                await bot.send_message(ctx.message.channel, f'Hmmm... {subject_string} doesn\'t use bad language.')
+                await bot.send_message(ctx.message.channel, f'Hmmm... {subject_string[0]} doesn\'t use bad language.')
     else:
         await bot.send_message(ctx.message.channel, error_message)
 

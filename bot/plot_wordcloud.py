@@ -40,7 +40,7 @@ def generate(data_id, naughty=False):
             bad_language = bad_language + (s + ' ') * content.lower().count(' ' + s + ' ')
         selected_text = bad_language
         if bad_language == '':
-            return False
+            return False, ''
     else:
         selected_text = content
 
@@ -58,8 +58,9 @@ def generate(data_id, naughty=False):
     ax.imshow(wc, interpolation='bilinear')
 
     if naughty:
-        fig.savefig(f'../tmp/{data_id}-dirty-word-cloud.png')
+        file_name = f'../tmp/{data_id}-dirty-word-cloud.png'
     else:
-        fig.savefig(f'../tmp/{data_id}-word-cloud.png')
+        file_name = f'../tmp/{data_id}-word-cloud.png'
 
-    return True
+    fig.savefig(file_name)
+    return True, file_name

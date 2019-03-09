@@ -1,4 +1,7 @@
 from discord import utils
+import s3fs
+import gzip
+import common.config
 
 
 # Use this to identify a user by mention or name#discriminator
@@ -30,3 +33,14 @@ def get_subject(bot, ctx, args, command_name):
 
         except IndexError:
             return False, f'Hmmm... I can\'t seem to find {subject_string}'
+
+
+# WIP...
+def count_word(data_id, word):
+    s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
+                           secret=common.config.aws_secret_access_key)
+    with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
+        g = gzip.GzipFile(fileobj=f)
+        content = g.read().decode().replace(common.config.unique_delimiter, ' ')
+
+    content.lower().count(' ' + word.lower() + ' ')
