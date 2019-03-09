@@ -2,6 +2,8 @@ import common.config
 from common.tables import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+import datetime as dt
 
 # Setup connection
 global conn, session
@@ -10,17 +12,20 @@ engine = create_engine(common.config.database_url)
 conn = engine.connect()
 session = Session(engine)
 
+
 # WIP....
 def check_connection():
     result = session.query(Trainer).all()
     print(f'Connected... # of registered users: {len(result)}')
 
+
 def check_if_registered(message):
     id_to_check = int(message.author.id)
-    result = session.query(Trainer)\
-        .filter(Trainer.discord_id==id_to_check)\
+    result = session.query(Trainer) \
+        .filter(Trainer.discord_id == id_to_check) \
         .all()
     return len(result) != 0
+
 
 def register_new_user(message, email):
     new_user = Trainer(
@@ -32,20 +37,51 @@ def register_new_user(message, email):
     session.add(new_user)
     session.commit()
 
+
 def update_user_email(message, email):
     users_id = int(message.author.id)
-    session.query(Trainer)\
-        .filter(Trainer.discord_id==users_id)\
+    session.query(Trainer) \
+        .filter(Trainer.discord_id == users_id) \
         .update({'email': email})
     session.commit()
 
-def create_dataset(ctx, user_mention):
-    return
+
+def create_dataset(ctx, user_mention, uid):
+    new_dataset = DataSet(
+        trainer_id=int(ctx.message.author.id),
+        subject_id=int(user_mention.id),
+        server_name=ctx.message.server.name,
+        server_id=int(ctx.message.server.id),
+        time_collected=dt.datetime.utcnow(),
+        data_uid=uid
+    )
+    session.add(new_dataset)
+    session.commit()
+
+
+def get_latest_dataset(ctx, user_mention):
+    result = session.query(DataSet)\
+        .filter(DataSet.subject_id == int(user_mention.id))\
+        .filter(DataSet.server_id == int(ctx.message.server.id))\
+        .all()
+
+    max_ts = dt.datetime.min
+    for r in result:
+        if r.time_collected > max_ts:
+            max_ts = r.time_collected
+            uid = r.data_uid
+
+    if max_ts is not dt.datetime.min:
+        return uid
+    else:
+        return False
+
 
 def make_tables():
     sql = 'DROP TABLE IF EXISTS training_jobs, trainers, data_sets;'
     engine.execute(sql)
     Base.metadata.create_all(conn, checkfirst=False)
+
 
 if __name__ == '__main__':
     make_tables()
