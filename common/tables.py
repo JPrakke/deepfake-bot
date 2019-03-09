@@ -10,7 +10,6 @@ class Trainer(Base):
     id = Column(Integer, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
     user_name = Column(String(255))
-    email = Column(String(255))
     number_submitted_jobs = Column(Integer)
     available_jobs = Column(Integer)
 

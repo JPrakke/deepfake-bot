@@ -2,22 +2,26 @@ from discord import utils
 
 
 # Use this to identify a user by mention or name#discriminator
-def get_subject(bot, ctx, subject_string):
+def get_subject(bot, ctx, subject_string, command_name):
     mentions = ctx.message.mentions
 
     if len(mentions) == 1:
-        return mentions[0]
+        return mentions[0], ''
     elif len(mentions) > 1:
-        return 'Too many...'
+        return False, f'One at a time please. Usage: `df!{command_name} User#0000`'
+
     else:
         try:
             subject_name = subject_string.split('#')[0]
             subject_discriminator = subject_string.split('#')[1]
             p = bot.get_all_members()
             found_members = filter(lambda m: (m.discriminator == subject_discriminator)
-                                             and (m.name == subject_name), p)
-
-            return utils.get(found_members)
+                                   and (m.name == subject_name), p)
+            subject =  utils.get(found_members)
+            if subject:
+                return subject, ''
+            else:
+                return False, f'Hmmm... I can\'t seem to find {subject_string}'
 
         except IndexError:
-            return 'Not found'
+            return False, f'Hmmm... I can\'t seem to find {subject_string}'

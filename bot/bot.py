@@ -1,7 +1,6 @@
 import os
 import asyncio
 from discord.ext import commands
-from discord import utils
 import extract
 import queries
 import botutils
@@ -32,92 +31,58 @@ async def repeat(ctx, msg):
 async def analyze(ctx, subject_string):
     """Extracts chat history of a subject if the user is registered"""
 
-    is_registered = queries.check_if_registered(ctx.message)
-
-    if is_registered:
-        subject = botutils.get_subject(bot, ctx, subject_string)
-
-        if subject == 'Too many...':
-            await bot.send_message(ctx.message.channel,
-                                   f'One at a time please. Usage: `df!analyze User#0000`')
-        elif subject == 'Not found':
-            await bot.send_message(ctx.message.channel,
-                                   f'{subject_string} doesn\'t seem to be a valid user. Usage: `df!analyze User#0000`')
-        else:
-            bot.loop.create_task(
-                extract.extract_and_analyze(ctx, subject, bot)
-            )
-
+    queries.register_if_not_already(ctx)
+    subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'analyze')
+    if subject:
+        bot.loop.create_task(
+            extract.extract_and_analyze(ctx, subject, bot)
+        )
     else:
-        await bot.send_message(ctx.message.channel,
-                               'Hmmm... I can\'t seem to find you. Try `df!register` to get started.')
+        await bot.send_message(ctx.message.channel, error_message)
 
 
 @bot.command(pass_context=True)
 async def wordcloud(ctx, subject_string):
     """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
 
-    is_registered = queries.check_if_registered(ctx.message)
-
-    if is_registered:
-        subject = botutils.get_subject(bot, ctx, subject_string)
-
-        if subject == 'Too many...':
+    queries.register_if_not_already(ctx)
+    subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'wordcloud')
+    if subject:
+        data_id = queries.get_latest_dataset(ctx, subject)
+        if not data_id:
             await bot.send_message(ctx.message.channel,
-                                   f'One at a time please. Usage: `df!analyze User#0000`')
-        elif subject == 'Not found':
-            await bot.send_message(ctx.message.channel,
-                                   f'{subject_string} doesn\'t seem to be a valid user. Usage: `df!analyze User#0000`')
+                                   f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
         else:
-            data_id = queries.get_latest_dataset(ctx, subject)
-            if not data_id:
-                await bot.send_message(ctx.message.channel,
-                                       f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
-            else:
-                plot_wordcloud.generate(data_id)
-                await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite words:')
-                await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-word-cloud.png')
-                os.remove(f'../tmp/{data_id}-word-cloud.png')
-
+            plot_wordcloud.generate(data_id)
+            await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite words:')
+            await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-word-cloud.png')
+            os.remove(f'../tmp/{data_id}-word-cloud.png')
     else:
-        await bot.send_message(ctx.message.channel,
-                               'Hmmm... I can\'t seem to find you. Try `df!register` to get started.')
+        await bot.send_message(ctx.message.channel, error_message)
 
 
 @bot.command(pass_context=True)
 async def dirtywordcloud(ctx, subject_string):
     """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
 
-    is_registered = queries.check_if_registered(ctx.message)
-
-    if is_registered:
-        subject = botutils.get_subject(bot, ctx, subject_string)
-
-        if subject == 'Too many...':
+    queries.register_if_not_already(ctx)
+    subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'dirtywordcloud')
+    if subject:
+        data_id = queries.get_latest_dataset(ctx, subject)
+        if not data_id:
             await bot.send_message(ctx.message.channel,
-                                   f'One at a time please. Usage: `df!analyze User#0000`')
-        elif subject == 'Not found':
-            await bot.send_message(ctx.message.channel,
-                                   f'{subject_string} doesn\'t seem to be a valid user. Usage: `df!analyze User#0000`')
+                                   f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
         else:
-            data_id = queries.get_latest_dataset(ctx, subject)
-            if not data_id:
-                await bot.send_message(ctx.message.channel,
-                                       f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
+            user_swears = plot_wordcloud.generate(data_id, True)
+            if user_swears:
+                await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite curse words:')
+                await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-dirty-word-cloud.png')
+                os.remove(f'../tmp/{data_id}-dirty-word-cloud.png')
+                await bot.send_message(ctx.message.channel, 'What a potty mouth!')
             else:
-                user_swears = plot_wordcloud.generate(data_id, True)
-
-                if user_swears:
-                    await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite curse words:')
-                    await bot.send_file(ctx.message.channel, f'../tmp/{data_id}-dirty-word-cloud.png')
-                    os.remove(f'../tmp/{data_id}-dirty-word-cloud.png')
-                    await bot.send_message(ctx.message.channel, 'What a potty mouth!')
-                else:
-                    await bot.send_message(ctx.message.channel, f'Hmmm... {subject_string} doesn\'t use bad language.')
-
+                await bot.send_message(ctx.message.channel, f'Hmmm... {subject_string} doesn\'t use bad language.')
     else:
-        await bot.send_message(ctx.message.channel,
-                               'Hmmm... I can\'t seem to find you. Try `df!register` to get started.')
+        await bot.send_message(ctx.message.channel, error_message)
 
 
 @bot.command(pass_context=True)
@@ -127,27 +92,8 @@ async def train(ctx, user_mention):
     await bot.send_message(channel, "Not yet implemented...")
 
 
-@bot.command(pass_context=True)
-async def register(ctx):
-    await bot.send_message(ctx.message.channel, 'Direct message sent.')
-    await bot.send_message(ctx.message.author,
-                           'Reply to me with your email to get started. (Feel free to make one up! e.g. me@mail.mail)')
-
-
 @bot.event
 async def on_message(message):
-    if message.server is None and message.author != bot.user:
-        email = message.content
-        if '@' in email:
-            if queries.check_if_registered(message):
-                queries.update_user_email(message, email)
-                await bot.send_message(message.author, 'Email updated.')
-            else:
-                queries.register_new_user(message, email)
-                await bot.send_message(message.author, 'Registered!')
-        else:
-            await bot.send_message(message.author, 'That doesn\'t seem to be a valid email.')
-
     await bot.process_commands(message)
 
 

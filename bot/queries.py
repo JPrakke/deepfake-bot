@@ -19,31 +19,20 @@ def check_connection():
     print(f'Connected... # of registered users: {len(result)}')
 
 
-def check_if_registered(message):
-    id_to_check = int(message.author.id)
+def register_if_not_already(ctx):
+    id_to_check = int(ctx.message.author.id)
     result = session.query(Trainer) \
         .filter(Trainer.discord_id == id_to_check) \
         .all()
-    return len(result) != 0
 
-
-def register_new_user(message, email):
-    new_user = Trainer(
-        discord_id=int(message.author.id),
-        email=email,
-        number_submitted_jobs=0,
-        available_jobs=-1
-    )
-    session.add(new_user)
-    session.commit()
-
-
-def update_user_email(message, email):
-    users_id = int(message.author.id)
-    session.query(Trainer) \
-        .filter(Trainer.discord_id == users_id) \
-        .update({'email': email})
-    session.commit()
+    if len(result) == 0:
+        new_user = Trainer(
+            discord_id=int(ctx.message.author.id),
+            number_submitted_jobs=0,
+            available_jobs=-1
+        )
+        session.add(new_user)
+        session.commit()
 
 
 def create_dataset(ctx, user_mention, uid):
