@@ -2,8 +2,13 @@ from discord import utils
 
 
 # Use this to identify a user by mention or name#discriminator
-def get_subject(bot, ctx, subject_string, command_name):
+def get_subject(bot, ctx, args, command_name):
     mentions = ctx.message.mentions
+
+    if len(args) == 1:
+        subject_string = args[0]
+    else:
+        return False, f'Usage: `df!{command_name} User#0000`'
 
     if len(mentions) == 1:
         return mentions[0], ''

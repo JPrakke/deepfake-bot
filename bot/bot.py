@@ -28,7 +28,7 @@ async def repeat(ctx, msg):
 
 
 @bot.command(pass_context=True)
-async def analyze(ctx, subject_string):
+async def analyze(ctx, *subject_string):
     """Extracts chat history of a subject if the user is registered"""
 
     queries.register_if_not_already(ctx)
@@ -42,7 +42,7 @@ async def analyze(ctx, subject_string):
 
 
 @bot.command(pass_context=True)
-async def wordcloud(ctx, subject_string):
+async def wordcloud(ctx, *subject_string):
     """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
 
     queries.register_if_not_already(ctx)
@@ -62,7 +62,7 @@ async def wordcloud(ctx, subject_string):
 
 
 @bot.command(pass_context=True)
-async def dirtywordcloud(ctx, subject_string):
+async def dirtywordcloud(ctx, *subject_string):
     """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
 
     queries.register_if_not_already(ctx)
@@ -86,7 +86,7 @@ async def dirtywordcloud(ctx, subject_string):
 
 
 @bot.command(pass_context=True)
-async def train(ctx, user_mention):
+async def train(ctx, *user_mention):
     """Trains a model based on mentioned user. Must run analyze first."""
     channel = ctx.message.channel
     await bot.send_message(channel, "Not yet implemented...")
