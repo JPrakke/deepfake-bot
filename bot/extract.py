@@ -53,6 +53,10 @@ async def extract_and_analyze(ctx, user_mention, bot):
     os.remove(text_file_name)
     os.remove(channel_file_name)
 
+    # Bot reply
+    await bot.send_message(ctx.message.channel,
+                           f'Analysis complete for {user_mention}. Found {message_counter} messages.')
+
 
 def upload_to_s3(file_name):
     s3 = boto3.resource('s3',
