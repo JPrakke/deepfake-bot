@@ -1,6 +1,7 @@
-import os, uuid, gzip, boto3, discord, asyncio, common.config
+import uuid, gzip, boto3
 import datetime as dt
 from bot import queries
+from common.config import *
 
 
 # Need to make this a background task
@@ -22,7 +23,9 @@ async def extract_and_analyze(ctx, user_mention, bot):
                 async for message in bot.logs_from(channel, limit=10**7):
                     if message.author == user_mention:
                         message_counter += 1
-                        result = str(message.content + common.config.unique_delimiter)
+                        # result = str(await replace_mention(bot, message.content) +
+                        #              unique_delimiter)
+                        result = str(message.clean_content + unique_delimiter)
                         timestamps.append(int(message.timestamp.timestamp()))
                         channels.append(channel.name)
                         f.write(result.encode())
@@ -60,7 +63,19 @@ async def extract_and_analyze(ctx, user_mention, bot):
 
 def upload_to_s3(file_name):
     s3 = boto3.resource('s3',
-                        aws_access_key_id=common.config.aws_access_key_id,
-                        aws_secret_access_key=common.config.aws_secret_access_key)
+                        aws_access_key_id=aws_access_key_id,
+                        aws_secret_access_key=aws_secret_access_key)
 
-    s3.Object(common.config.aws_s3_bucket_prefix, f'{file_name}'.strip('./tmp/')).upload_file(f'{file_name}')
+    s3.Object(aws_s3_bucket_prefix, f'{file_name}'.strip('./tmp/')).upload_file(f'{file_name}')
+
+
+async def replace_mention(bot, s):
+    matches = re_discord_id.findall(s)
+    for m in matches:
+        discord_id = m.replace('<', '')\
+                      .replace('>', '')\
+                      .replace('@', '')
+        user = await bot.get_user_info(discord_id)
+        name = f'@{user.name}#{user.discriminator}'
+        s = s.replace(m, name)
+    return s

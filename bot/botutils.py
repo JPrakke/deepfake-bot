@@ -2,6 +2,7 @@ from discord import utils
 import s3fs
 import gzip
 import common.config
+import re
 
 
 # Use this to identify a user by mention or name#discriminator
@@ -20,7 +21,7 @@ def get_subject(bot, ctx, subject_string, command_name):
             p = bot.get_all_members()
             found_members = filter(lambda m: (m.discriminator == subject_discriminator)
                                    and (m.name == subject_name), p)
-            subject =  utils.get(found_members)
+            subject = utils.get(found_members)
             if subject:
                 return subject, ''
             else:
@@ -30,7 +31,7 @@ def get_subject(bot, ctx, subject_string, command_name):
             return False, f'Hmmm... I can\'t seem to find {subject_string}'
 
 
-# WIP...
+# Counts the number of words in a data set
 def count_word(data_id, word):
     s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
                            secret=common.config.aws_secret_access_key)
@@ -38,4 +39,7 @@ def count_word(data_id, word):
         g = gzip.GzipFile(fileobj=f)
         content = g.read().decode().replace(common.config.unique_delimiter, ' ')
 
-    content.lower().count(' ' + word.lower() + ' ')
+    # Regex for the word in question
+    expr = f'[ ]{word.lower()}[.!? ]'
+    reg = re.compile(expr)
+    return len(reg.findall(content.lower()))

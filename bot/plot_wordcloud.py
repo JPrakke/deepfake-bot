@@ -23,10 +23,9 @@ def get_frequency_dict(sentence):
 
 def apply_filters(content, filters):
     if filters == ['']:
-        return ' '.join(content)
+        return content
 
-    filtered_content = ''
-    counter = 0
+    filtered_content = []
     for mssg in content:
         include = True
         for filter_words in filters:
@@ -34,33 +33,34 @@ def apply_filters(content, filters):
                 include = False
                 break
         if include:
-            filtered_content += ' ' + mssg
-            counter += 0
+            filtered_content.append(mssg)
 
-    return filtered_content, 0
+    return filtered_content
 
 
-def generate(data_id, filters, naughty=False):
+def get_s3_content(data_id):
     s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
                            secret=common.config.aws_secret_access_key)
     with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
         g = gzip.GzipFile(fileobj=f)
         content = g.read().decode().split(common.config.unique_delimiter)
 
+    return content
+
+
+def generate_dirty(data_id):
+
+    content = ' '.join(get_s3_content(data_id))
 
     swear_path = './bot/resources/swearWords.txt'
     with open(swear_path, 'r') as f:
         swear_words = [i.strip() for i in f]
 
-    if naughty:
         bad_language = ''
         for s in swear_words:
             bad_language = bad_language + (s + ' ') * content.lower().count(' ' + s + ' ')
-        selected_text = bad_language
         if bad_language == '':
-            return False, ''
-    else:
-        selected_text = apply_filters(content, filters)
+            return False
 
     wc = WordCloud(background_color="black",
                    stopwords=STOPWORDS,
@@ -68,17 +68,37 @@ def generate(data_id, filters, naughty=False):
                    width=640,
                    height=480)
 
-    wc.generate_from_frequencies(get_frequency_dict(selected_text))
+    wc.generate_from_frequencies(get_frequency_dict(bad_language))
     fig = plt.figure(frameon=False)
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()
     fig.add_axes(ax)
     ax.imshow(wc, interpolation='bilinear')
 
-    if naughty:
-        file_name = f'./tmp/{data_id}-dirty-word-cloud.png'
-    else:
-        file_name = f'./tmp/{data_id}-word-cloud.png'
+    file_name = f'./tmp/{data_id}-dirty-word-cloud.png'
+    fig.savefig(file_name)
+    return file_name
+
+
+def generate(data_id, filters):
+
+    content = get_s3_content(data_id)
+    selected_content = apply_filters(content, filters)
+
+    wc = WordCloud(background_color="black",
+                   stopwords=STOPWORDS,
+                   colormap='BrBG',
+                   width=640,
+                   height=480)
+
+    wc.generate_from_frequencies(get_frequency_dict(' '.join(selected_content)))
+    fig = plt.figure(frameon=False)
+    ax = plt.Axes(fig, [0., 0., 1., 1.])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(wc, interpolation='bilinear')
+
+    file_name = f'./tmp/{data_id}-word-cloud.png'
 
     fig.savefig(file_name)
-    return True, file_name
+    return file_name, len(content), len(selected_content)
