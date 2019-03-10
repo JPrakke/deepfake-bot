@@ -5,6 +5,8 @@ from textgenrnn import textgenrnn
 import common.config
 
 
+# Simple training job script. Adds models to tmp folder.
+# TODO: add queries, figure out how to host this and make it a bot command...
 def train(data_id):
     model_cfg = {
         'word_level': False,
@@ -25,7 +27,7 @@ def train(data_id):
         'is_csv': False
     }
 
-    textgen = textgenrnn(name=f'../tmp/{data_id}')
+    textgen = textgenrnn(name=f'./tmp/{data_id}')
     train_function = textgen.train_from_file
 
     # Download from S3
@@ -37,13 +39,13 @@ def train(data_id):
         content = g.read().decode().replace(common.config.unique_delimiter, '\n')
 
     # Copy to tmp folder
-    with open(f'../tmp/{data_id}-train.txt', 'w', encoding='utf-8') as f:
+    with open(f'./tmp/{data_id}-train.txt', 'w', encoding='utf-8') as f:
         f.write(content)
 
     # Start training
     try:
         train_function(
-            file_path=f'../tmp/{data_id}-train.txt',
+            file_path=f'./tmp/{data_id}-train.txt',
             new_model=True,
             num_epochs=train_cfg['num_epochs'],
             gen_epochs=train_cfg['gen_epochs'],

@@ -1,11 +1,11 @@
 import os
 import asyncio
 from discord.ext import commands
-import extract
-import queries
-import botutils
-import plot_wordcloud
-import plot_activity
+from bot import extract
+from bot import queries
+from bot import botutils
+from bot import plot_wordcloud
+from bot import plot_activity
 
 bot = commands.Bot(command_prefix='df!')
 

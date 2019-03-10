@@ -1,6 +1,6 @@
 import os, uuid, gzip, boto3, discord, asyncio, common.config
 import datetime as dt
-import queries
+from bot import queries
 
 
 # Need to make this a background task
@@ -8,8 +8,8 @@ async def extract_and_analyze(ctx, user_mention, bot):
     await bot.wait_until_ready()
 
     extraction_id = str(uuid.uuid4().hex)
-    text_file_name = f'../tmp/{extraction_id}-text.dsv.gz'
-    channel_file_name = f'../tmp/{extraction_id}-channels.tsv.gz'
+    text_file_name = f'./tmp/{extraction_id}-text.dsv.gz'
+    channel_file_name = f'./tmp/{extraction_id}-channels.tsv.gz'
 
     channels = []
     timestamps = []
@@ -63,4 +63,4 @@ def upload_to_s3(file_name):
                         aws_access_key_id=common.config.aws_access_key_id,
                         aws_secret_access_key=common.config.aws_secret_access_key)
 
-    s3.Object(common.config.aws_s3_bucket_prefix, f'{file_name}'.strip('../tmp/')).upload_file(f'{file_name}')
+    s3.Object(common.config.aws_s3_bucket_prefix, f'{file_name}'.strip('./tmp/')).upload_file(f'{file_name}')

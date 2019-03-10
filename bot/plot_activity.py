@@ -65,7 +65,7 @@ def generate(data_id, user_name):
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    file_name = f'../tmp/{data_id}-activity.png'
+    file_name = f'./tmp/{data_id}-activity.png'
     fig.savefig(file_name)
     return file_name
 
@@ -105,7 +105,7 @@ def bar_charts(data_id, user_name):
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    file_name = f'../tmp/{data_id}-bar-chart.png'
+    file_name = f'./tmp/{data_id}-bar-chart.png'
     fig.savefig(file_name)
 
     # Log scale plot to show all the channels clearer
@@ -123,7 +123,7 @@ def bar_charts(data_id, user_name):
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    file_name_log = f'../tmp/{data_id}-bar-chart-log.png'
+    file_name_log = f'./tmp/{data_id}-bar-chart-log.png'
     fig.savefig(file_name_log)
 
     return file_name, file_name_log

@@ -30,7 +30,7 @@ def generate(data_id, naughty=False):
         g = gzip.GzipFile(fileobj=f)
         content = g.read().decode().replace(common.config.unique_delimiter, ' ')
 
-    swear_path = './resources/swearWords.txt'
+    swear_path = './bot/resources/swearWords.txt'
     with open(swear_path, 'r') as f:
         swear_words = [i.strip() for i in f]
 
@@ -58,9 +58,9 @@ def generate(data_id, naughty=False):
     ax.imshow(wc, interpolation='bilinear')
 
     if naughty:
-        file_name = f'../tmp/{data_id}-dirty-word-cloud.png'
+        file_name = f'./tmp/{data_id}-dirty-word-cloud.png'
     else:
-        file_name = f'../tmp/{data_id}-word-cloud.png'
+        file_name = f'./tmp/{data_id}-word-cloud.png'
 
     fig.savefig(file_name)
     return True, file_name
