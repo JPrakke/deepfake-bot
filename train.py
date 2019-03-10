@@ -7,7 +7,7 @@ import common.config
 
 # Simple training job script. Adds models to tmp folder.
 # TODO: add queries, figure out how to host this and make it a bot command...
-def train(data_id):
+def train(data_id, filters):
     model_cfg = {
         'word_level': False,
         'rnn_size': 128,
@@ -34,13 +34,31 @@ def train(data_id):
     s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
                            secret=common.config.aws_secret_access_key)
 
+    # Extract
     with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
         g = gzip.GzipFile(fileobj=f)
-        content = g.read().decode().replace(common.config.unique_delimiter, '\n')
+        content = g.read().decode()
 
-    # Copy to tmp folder
+    # Apply pre-processing. I'm sure there's a more pythonic way to do this...
+    content_array = content.split(common.config.unique_delimiter)
+    filter_words = filter.split(',')
+    filtered_content = []
+    for message in content_array:
+        include = True
+        for pattern in filter_words:
+            if pattern in message:
+                include = False
+                break
+        if include:
+            filtered_content.append(message)
+
+    # Logging
+    print(f'Writing data set. {len(filtered_content)} of {len(content_array)} original messaged used...')
+
+    # Generate a filtered data set in tmp folder
     with open(f'./tmp/{data_id}-train.txt', 'w', encoding='utf-8') as f:
-        f.write(content)
+        for line in filtered_content:
+            f.write(line + '\n')
 
     # Start training
     try:
@@ -65,4 +83,9 @@ def train(data_id):
 
 
 if __name__ == '__main__':
-    train(sys.argv[1])
+    if len(sys.argv) != 3:
+        print('Usage: python train.py <data_id> <"filter1,filter2,...">')
+    else:
+        data_id = sys.argv[1]
+        filters = sys.argv[2]
+        train(data_id, filters)
