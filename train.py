@@ -41,7 +41,7 @@ def train(data_id, filters):
 
     # Apply pre-processing. I'm sure there's a more pythonic way to do this...
     content_array = content.split(common.config.unique_delimiter)
-    filter_words = filter.split(',')
+    filter_words = filters.split(',')
     filtered_content = []
     for message in content_array:
         include = True
