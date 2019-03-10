@@ -40,7 +40,6 @@ def train(data_id):
     with open(f'../tmp/{data_id}-train.txt', 'w', encoding='utf-8') as f:
         f.write(content)
 
-
     # Start training
     try:
         train_function(
@@ -64,4 +63,4 @@ def train(data_id):
 
 
 if __name__ == '__main__':
-    basic_job(sys.argv[1])
+    train(sys.argv[1])
