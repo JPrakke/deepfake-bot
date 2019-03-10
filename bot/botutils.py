@@ -5,18 +5,13 @@ import common.config
 
 
 # Use this to identify a user by mention or name#discriminator
-def get_subject(bot, ctx, args, command_name):
+def get_subject(bot, ctx, subject_string, command_name):
     mentions = ctx.message.mentions
-
-    if len(args) == 1:
-        subject_string = args[0]
-    else:
-        return False, f'Usage: `df!{command_name} User#0000`'
 
     if len(mentions) == 1:
         return mentions[0], ''
     elif len(mentions) > 1:
-        return False, f'One at a time please. Usage: `df!{command_name} User#0000`'
+        return False, f'One at a time please. Usage: `df!{command_name} User#0000` <args>'
 
     else:
         try:

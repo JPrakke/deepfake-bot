@@ -14,8 +14,6 @@ def get_frequency_dict(sentence):
     for text in sentence.split(" "):
         if text.lower().strip() in STOPWORDS:
             continue
-        if not text.isalpha():
-            continue
         val = tmp_dict.get(text, 0)
         tmp_dict[text.strip()] = val + 1
     for key in tmp_dict:
@@ -23,12 +21,32 @@ def get_frequency_dict(sentence):
     return full_terms_dict
 
 
-def generate(data_id, naughty=False):
+def apply_filters(content, filters):
+    if filters == ['']:
+        return ' '.join(content)
+
+    filtered_content = ''
+    counter = 0
+    for mssg in content:
+        include = True
+        for filter_words in filters:
+            if filter_words in mssg:
+                include = False
+                break
+        if include:
+            filtered_content += ' ' + mssg
+            counter += 0
+
+    return filtered_content, 0
+
+
+def generate(data_id, filters, naughty=False):
     s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
                            secret=common.config.aws_secret_access_key)
     with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
         g = gzip.GzipFile(fileobj=f)
-        content = g.read().decode().replace(common.config.unique_delimiter, ' ')
+        content = g.read().decode().split(common.config.unique_delimiter)
+
 
     swear_path = './bot/resources/swearWords.txt'
     with open(swear_path, 'r') as f:
@@ -42,7 +60,7 @@ def generate(data_id, naughty=False):
         if bad_language == '':
             return False, ''
     else:
-        selected_text = content
+        selected_text = apply_filters(content, filters)
 
     wc = WordCloud(background_color="black",
                    stopwords=STOPWORDS,

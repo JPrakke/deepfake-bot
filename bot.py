@@ -44,19 +44,30 @@ async def analyze(ctx, *subject_string):
 
 
 @bot.command(pass_context=True)
-async def wordcloud(ctx, *subject_string):
+async def wordcloud(ctx, *args):
     """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
 
     queries.register_if_not_already(ctx)
+
+    if len(args) != 2:
+        await bot.send_message(ctx.message.channel,
+                               f'Two arguments required, a user and a comma separated list of filter words.\n' +
+                               f'Usage: `df!wordcloud <User#0000> <"filter1,filter2...">`\n' +
+                               f'Without filters: `df!wordcloud <User#0000> ""`')
+        return
+    else:
+        subject_string = args[0]
+        filters = args[1].split(',')
+
     subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'wordcloud')
     if subject:
         data_id = queries.get_latest_dataset(ctx, subject)
         if not data_id:
             await bot.send_message(ctx.message.channel,
-                                   f'I can\'t find a data set for {subject_string[0]}. Try: `df!analyze User#0000` first')
+                                   f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
         else:
-            _, file_name = plot_wordcloud.generate(data_id)
-            await bot.send_message(ctx.message.channel, f'Here are {subject_string[0]}\'s favorite words:')
+            _, file_name = plot_wordcloud.generate(data_id, filters)
+            await bot.send_message(ctx.message.channel, f'Here are {subject_string}\'s favorite words:')
             await bot.send_file(ctx.message.channel, file_name)
             os.remove(file_name)
     else:
@@ -65,7 +76,7 @@ async def wordcloud(ctx, *subject_string):
 
 @bot.command(pass_context=True)
 async def activity(ctx, *subject_string):
-    """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
+    """Uploads a time series and bar charts image if a dataset exists for the mentioned subject"""
 
     queries.register_if_not_already(ctx)
     subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'activity')
