@@ -7,7 +7,7 @@ Base = declarative_base()
 
 class Trainer(Base):
     __tablename__ = 'trainers'
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
     user_name = Column(String(255))
     number_submitted_jobs = Column(Integer)
@@ -16,7 +16,7 @@ class Trainer(Base):
 
 class DataSet(Base):
     __tablename__ = 'data_sets'
-    id = Column(Integer, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     trainer_id = Column(BigInteger, ForeignKey('trainers.discord_id'))
     subject_id = Column(BigInteger)
     server_id = Column(BigInteger)
@@ -28,8 +28,8 @@ class DataSet(Base):
 
 class TrainingJob(Base):
     __tablename__ = 'training_jobs'
-    id = Column(Integer, primary_key=True)
-    data_id = Column(Integer, ForeignKey('data_sets.id'))
+    id = Column(BigInteger, primary_key=True)
+    data_id = Column(BigInteger, ForeignKey('data_sets.id'))
     time_started = Column(DateTime)
     time_finished = Column(DateTime)
     status = Column(String(16))  # 'In progress', 'Failed', or 'Finished'

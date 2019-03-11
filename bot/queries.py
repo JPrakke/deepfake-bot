@@ -28,6 +28,7 @@ def register_if_not_already(ctx):
     if len(result) == 0:
         new_user = Trainer(
             discord_id=int(ctx.message.author.id),
+            user_name=f'{ctx.message.author.name}#{ctx.message.author.discriminator}',
             number_submitted_jobs=0,
             available_jobs=-1
         )

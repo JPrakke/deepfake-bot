@@ -19,6 +19,7 @@ def start_job(data_id):
 
     job_id = job.id
     session.add(job)
+    session.commit()
     session.close()
     engine.dispose()
 
