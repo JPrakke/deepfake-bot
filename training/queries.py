@@ -37,9 +37,10 @@ def job_failed(job_id):
 
     job = session.query(TrainingJob.filter(id == job_id)).first()
     job.time_finished = None
-    job.staus = "Failed"
+    job.status = "Failed"
 
     session.commit()
+    session.close()
     engine.dispose()
 
 
@@ -53,4 +54,5 @@ def job_finished(job_id):
     job.status = "Finished"
 
     session.commit()
+    session.close()
     engine.dispose()
