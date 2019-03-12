@@ -29,6 +29,24 @@ def day_filler(dates, counts):
     return filled_dates, filled_counts
 
 
+def auto_time_scale(td):
+
+    if td.days < 1:
+        date_format = mdates.DateFormatter('%H:%M:%S')
+        major_tick = mdates.HourLocator
+    elif td.days < 7:
+        date_format = mdates.DateFormatter('%d %b-%Y')
+        major_tick = mdates.DayLocator()
+    elif td.days < 30:
+        date_format = mdates.DateFormatter('%d %b-%Y')
+        major_tick = mdates.DayLocator(interval=7)
+    else:
+        date_format = mdates.DateFormatter('%b-%Y')
+        major_tick = mdates.MonthLocator()
+
+    return date_format, major_tick
+
+
 def generate(data_id, user_name):
     s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
                            secret=common.config.aws_secret_access_key)

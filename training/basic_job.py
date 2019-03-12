@@ -92,7 +92,7 @@ def train(data_id, model_path, filters):
         # Model files
         config_file = f'{model_path}/{data_id}_config.json'
         vocab_file = f'{model_path}/{data_id}_vocab.json'
-        weights_file = f'{model_path}/{data_id}_weights.json'
+        weights_file = f'{model_path}/{data_id}_weights.hdf5'
 
         # Add them to s3
         s3 = boto3.resource('s3',
