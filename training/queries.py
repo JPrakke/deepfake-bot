@@ -21,9 +21,9 @@ def start_job(data_uid):
         status="In progress"
     )
 
-    job_id = job.id
     session.add(job)
     session.commit()
+    job_id = job.id
     session.close()
     engine.dispose()
 
