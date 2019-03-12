@@ -35,7 +35,9 @@ def job_failed(job_id):
     conn = engine.connect()
     session = Session(engine)
 
-    job = session.query(TrainingJob.filter(id == job_id)).first()
+    job = session.query(TrainingJob)\
+        .filter(TrainingJob.id == job_id)\
+        .first()
     job.time_finished = None
     job.status = "Failed"
 
@@ -49,7 +51,9 @@ def job_finished(job_id):
     conn = engine.connect()
     session = Session(engine)
 
-    job = session.query(TrainingJob.filter(id == job_id)).first()
+    job = session.query(TrainingJob)\
+        .filter(TrainingJob.id == job_id)\
+        .first()
     job.time_finished = dt.datetime.utcnow()
     job.status = "Finished"
 
