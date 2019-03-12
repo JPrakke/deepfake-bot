@@ -6,6 +6,7 @@ from bot import queries
 from bot import botutils
 from bot import plot_wordcloud
 from bot import plot_activity
+from textgenrnn import textgenrnn
 
 bot = commands.Bot(command_prefix='df!')
 
@@ -151,6 +152,35 @@ async def countword(ctx, *args):
 
     count = botutils.count_word(data_id, word)
     await bot.send_message(channel, f"User {subject_string} has said {word} {count} times.")
+
+
+@bot.command(pass_context=True)
+async def infer(ctx, *args):
+    queries.register_if_not_already(ctx)
+    subject_string = args[0]
+    subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'infer')
+    if subject:
+        data_uid, job_id = queries.get_latest_model(ctx, subject)
+        if not job_id:
+            await bot.send_message(ctx.message.channel, f'Sorry, I can\'t find a model for {subject_string}')
+        else:
+            await bot.send_message(ctx.message.channel, f'Loading model...')
+            botutils.download_model_files(data_uid, job_id)
+            print('Model downloaded...')
+            weights_file_name = f'{data_uid}-{str(job_id)}_weights.hdf5'
+            vocab_file_name = f'{data_uid}-{str(job_id)}_vocab.json'
+            config_file_name = f'{data_uid}-{str(job_id)}_config.json'
+
+            # TODO: optimize this..., pre-load available models as a background test
+            model = textgenrnn(name=f'{data_uid}-{str(job_id)}',
+                               weights_path=f'./tmp/{weights_file_name}',
+                               vocab_path=f'./tmp/{vocab_file_name}',
+                               config_path=f'./tmp/{config_file_name}'
+                               )
+
+            print('Model files read. Generating...')
+            result = model.generate(return_as_list=True)[0]
+            await bot.send_message(ctx.message.channel, result)
 
 
 @bot.command(pass_context=True)

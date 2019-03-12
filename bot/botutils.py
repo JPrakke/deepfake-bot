@@ -1,8 +1,9 @@
 from discord import utils
 import s3fs
 import gzip
-import common.config
 import re
+import boto3
+from common.config import *
 
 
 # Use this to identify a user by mention or name#discriminator
@@ -33,13 +34,28 @@ def get_subject(bot, ctx, subject_string, command_name):
 
 # Counts the number of words in a data set
 def count_word(data_id, word):
-    s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
-                           secret=common.config.aws_secret_access_key)
-    with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=aws_access_key_id,
+                           secret=aws_secret_access_key)
+    with s3.open(f'{aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
         g = gzip.GzipFile(fileobj=f)
-        content = g.read().decode().replace(common.config.unique_delimiter, ' ')
+        content = g.read().decode().replace(unique_delimiter, ' ')
 
     # Regex for the word in question
     expr = f'[ ]{word.lower()}[.!? ]'
     reg = re.compile(expr)
     return len(reg.findall(content.lower()))
+
+
+# Copies model files from S3 to tmp folder
+def download_model_files(data_uid, job_id):
+    weights_file_name = f'{data_uid}-{str(job_id)}_weights.hdf5'
+    vocab_file_name = f'{data_uid}-{str(job_id)}_vocab.json'
+    config_file_name = f'{data_uid}-{str(job_id)}_config.json'
+
+    s3 = boto3.resource('s3',
+                        aws_access_key_id=aws_access_key_id,
+                        aws_secret_access_key=aws_secret_access_key)
+
+    s3.Bucket(aws_s3_bucket_prefix).download_file(weights_file_name, f'./tmp/{weights_file_name}')
+    s3.Bucket(aws_s3_bucket_prefix).download_file(vocab_file_name, f'./tmp/{vocab_file_name}')
+    s3.Bucket(aws_s3_bucket_prefix).download_file(config_file_name, f'./tmp/{config_file_name}')

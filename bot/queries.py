@@ -67,6 +67,27 @@ def get_latest_dataset(ctx, user_mention):
         return False
 
 
+def get_latest_model(ctx, user_mention):
+    """Returns a data_uid and job_ib from the latest finished training job"""""
+    latest_finished_job = session.query(TrainingJob) \
+                                 .join(DataSet) \
+                                 .filter(DataSet.subject_id == user_mention.id) \
+                                 .filter(DataSet.server_id == ctx.message.server.id) \
+                                 .filter(TrainingJob.status == 'Finished') \
+                                 .order_by(TrainingJob.id.desc()) \
+                                 .first()
+
+    if latest_finished_job is not None:
+        data_id = session.query(DataSet.data_uid)\
+                         .join(TrainingJob)\
+                         .filter(TrainingJob.id == latest_finished_job.id)\
+                         .first()\
+                         .data_uid
+        return data_id, latest_finished_job.id
+    else:
+        return False, False
+
+
 def make_tables():
     sql = 'DROP TABLE IF EXISTS training_jobs, trainers, data_sets;'
     engine.execute(sql)
