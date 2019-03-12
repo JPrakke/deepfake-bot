@@ -105,8 +105,3 @@ def train(data_id, model_path, filters):
 
         # Record training in database
         queries.job_finished(job_id)
-
-        # Cleanup Disk
-        os.remove(config_file)
-        os.remove(vocab_file)
-        os.remove(weights_file)
