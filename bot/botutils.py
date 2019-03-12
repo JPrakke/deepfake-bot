@@ -1,9 +1,10 @@
 from discord import utils
 import s3fs
 import gzip
-import re
 import boto3
 from common.config import *
+from bot import queries
+from textgenrnn import textgenrnn
 
 
 # Use this to identify a user by mention or name#discriminator
@@ -59,3 +60,26 @@ def download_model_files(data_uid, job_id):
     s3.Bucket(aws_s3_bucket_prefix).download_file(weights_file_name, f'./tmp/{weights_file_name}')
     s3.Bucket(aws_s3_bucket_prefix).download_file(vocab_file_name, f'./tmp/{vocab_file_name}')
     s3.Bucket(aws_s3_bucket_prefix).download_file(config_file_name, f'./tmp/{config_file_name}')
+
+
+# Need to make this a background task
+async def infer(ctx, data_uid, job_id, bot):
+    await bot.wait_until_ready()
+
+    print(f'Loading model...')
+    download_model_files(data_uid, job_id)
+    print('Model downloaded...')
+    weights_file_name = f'{data_uid}-{str(job_id)}_weights.hdf5'
+    vocab_file_name = f'{data_uid}-{str(job_id)}_vocab.json'
+    config_file_name = f'{data_uid}-{str(job_id)}_config.json'
+
+    # TODO: optimize this..., pre-load available models as a background test
+    model = textgenrnn(name=f'{data_uid}-{str(job_id)}',
+                       weights_path=f'./tmp/{weights_file_name}',
+                       vocab_path=f'./tmp/{vocab_file_name}',
+                       config_path=f'./tmp/{config_file_name}'
+                       )
+
+    print('Model files read. Generating...')
+    result = model.generate(return_as_list=True)[0]
+    await bot.send_message(ctx.message.channel, result)
