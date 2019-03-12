@@ -53,13 +53,8 @@ def generate(data_id, user_name):
     ax.set_title(f'{user_name}\'s Activity')
     ax.set_ylabel('# messages')
 
-    date_format = mdates.DateFormatter('%b-%Y')
-    months = mdates.MonthLocator()
-    days = mdates.DayLocator()
-
-    ax.xaxis.set_major_formatter(date_format)
-    ax.xaxis.set_major_locator(months)
-    ax.xaxis.set_minor_locator(days)
+    ax.xaxis.set_major_formatter(mdates.AutoDateFormatter)
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator)
     ax.grid()
 
     for tick in ax.get_xticklabels():
