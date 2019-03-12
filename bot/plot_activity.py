@@ -33,16 +33,19 @@ def auto_time_scale(td):
 
     if td.days < 1:
         date_format = mdates.DateFormatter('%H:%M:%S')
-        major_tick = mdates.HourLocator
+        major_tick = mdates.HourLocator()
     elif td.days < 7:
         date_format = mdates.DateFormatter('%d %b-%Y')
         major_tick = mdates.DayLocator()
     elif td.days < 30:
         date_format = mdates.DateFormatter('%d %b-%Y')
         major_tick = mdates.DayLocator(interval=7)
-    else:
+    elif td.days < 365:
         date_format = mdates.DateFormatter('%b-%Y')
         major_tick = mdates.MonthLocator()
+    else:
+        date_format = mdates.DateFormatter('%Y')
+        major_tick = mdates.YearLocator()
 
     return date_format, major_tick
 
@@ -71,8 +74,11 @@ def generate(data_id, user_name):
     ax.set_title(f'{user_name}\'s Activity')
     ax.set_ylabel('# messages')
 
-    ax.xaxis.set_major_formatter(mdates.AutoDateFormatter)
-    ax.xaxis.set_major_locator(mdates.AutoDateLocator)
+    date_range = df['datetime'].iloc[0] - df['datetime'].iloc[len(df)-1]
+    auto_format, auto_tick = auto_time_scale(date_range)
+
+    ax.xaxis.set_major_formatter(auto_format)
+    ax.xaxis.set_major_locator(auto_tick)
     ax.grid()
 
     for tick in ax.get_xticklabels():
