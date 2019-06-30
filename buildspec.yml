@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Entered the install phase...
+      - apt-get update -y
+      - apt install zip unzip
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo Entered the pre_build phase...
+  build:
+    commands:
+      - echo Entered the build phase...
+      - zip -r deepfake-bot.zip ./
+  post_build:
+    commands:
+      - echo Entered the post_build phase...
+artifacts:
+  files:
+    - deepfake-bot.zip
