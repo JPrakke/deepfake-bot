@@ -12,6 +12,9 @@ engine = create_engine(common.config.database_url)
 conn = engine.connect()
 session = Session(engine)
 
+# Keep the connection open in case the bot is idle
+engine.execute('SET SESSION wait_timeout=31536000')
+
 
 # WIP....
 def check_connection():

@@ -50,15 +50,20 @@ async def wordcloud(ctx, *args):
 
     queries.register_if_not_already(ctx)
 
-    if len(args) != 2:
-        await bot.send_message(ctx.message.channel,
-                               f'Two arguments required, a user and a comma separated list of filter words.\n' +
-                               f'Usage: `df!wordcloud <User#0000> <"filter1,filter2...">`\n' +
-                               f'Without filters: `df!wordcloud <User#0000> ""`')
-        return
-    else:
+    if len(args) == 1:
+        subject_string = args[0]
+        filters = []
+    elif len(args) == 2:
         subject_string = args[0]
         filters = args[1].split(',')
+    else:
+        await bot.send_message(ctx.message.channel,
+                               f'Use `wordcloud` to explore your subject\'s chat history and determine what words or '
+                               + 'phrases should be filtered out of your model. These can be added as a list of comma '
+                               + 'separated expressions in quotes.\n\n' +
+                               f'With filters: `df!wordcloud <User#0000> <"filter1,filter2...">`\n' +
+                               f'Without filters: `df!wordcloud <User#0000>`')
+        return
 
     subject, error_message = botutils.get_subject(bot, ctx, subject_string, 'wordcloud')
     if subject:
@@ -180,5 +185,12 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
-bot.run(token)
+class WSGIApp:
+    def run(self):
+        token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
+        bot.run(token)
+
+
+if __name__ == '__main__':
+    application = WSGIApp()
+    application.run()
