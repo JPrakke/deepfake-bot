@@ -187,7 +187,10 @@ async def on_message(message):
 
 # Needed for the WSGI script in elastic beanstalk
 class WSGIApp:
-    def __call__(self):
+    def __call__(self, *args, **kwargs):
+        # Because I'm curious what WSGI is doing. TODO: remove this later.
+        print(args)
+        print(kwargs)
         token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
         bot.run(token)
 
