@@ -187,7 +187,7 @@ async def on_message(message):
 
 # Needed for the WSGI script in elastic beanstalk
 class WSGIApp:
-    def run(self):
+    def __call__(self):
         token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
         bot.run(token)
 
@@ -196,4 +196,4 @@ global application
 application = WSGIApp()
 
 if __name__ == '__main__':
-    application.run()
+    application()
