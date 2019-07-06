@@ -82,4 +82,4 @@ async def infer(ctx, data_uid, job_id, bot):
 
     print('Model files read. Generating...')
     result = model.generate(return_as_list=True)[0]
-    await bot.send_message(ctx.message.channel, result)
+    await ctx.message.channel.send(result)

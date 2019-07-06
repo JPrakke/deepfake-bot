@@ -18,13 +18,13 @@ async def extract_and_analyze(ctx, user_mention, bot):
     print(f'Extracting chat history for {user_mention}...')
     start_time = dt.datetime.now()
     with gzip.open(text_file_name, 'wb') as f:
-        for channel in ctx.message.server.channels:
+        for channel in ctx.message.guild.channels:
             try:
-                async for message in bot.logs_from(channel, limit=10**7):
+                async for message in channel.history(limit=10**7):
                     if message.author == user_mention:
                         message_counter += 1
                         result = str(message.clean_content + unique_delimiter)
-                        timestamps.append(int(message.timestamp.timestamp()))
+                        timestamps.append(int(message.created_at.timestamp()))
                         channels.append(channel.name)
                         f.write(result.encode())
             except Exception:
@@ -55,8 +55,7 @@ async def extract_and_analyze(ctx, user_mention, bot):
     os.remove(channel_file_name)
 
     # Bot reply
-    await bot.send_message(ctx.message.channel,
-                           f'Analysis complete for {user_mention}. Found {message_counter} messages.')
+    await ctx.message.channel.send(f'Analysis complete for {user_mention}. Found {message_counter} messages.')
 
 
 def upload_to_s3(file_name):

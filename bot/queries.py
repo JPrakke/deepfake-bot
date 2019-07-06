@@ -43,8 +43,8 @@ def create_dataset(ctx, user_mention, uid):
     new_dataset = DataSet(
         trainer_id=int(ctx.message.author.id),
         subject_id=int(user_mention.id),
-        server_name=ctx.message.server.name,
-        server_id=int(ctx.message.server.id),
+        server_name=ctx.message.guild.name,
+        server_id=int(ctx.message.guild.id),
         time_collected=dt.datetime.utcnow(),
         data_uid=uid
     )
@@ -55,7 +55,7 @@ def create_dataset(ctx, user_mention, uid):
 def get_latest_dataset(ctx, user_mention):
     result = session.query(DataSet)\
         .filter(DataSet.subject_id == int(user_mention.id))\
-        .filter(DataSet.server_id == int(ctx.message.server.id))\
+        .filter(DataSet.server_id == int(ctx.message.guild.id))\
         .all()
 
     max_ts = dt.datetime.min
@@ -75,7 +75,7 @@ def get_latest_model(ctx, user_mention):
     latest_finished_job = session.query(TrainingJob) \
                                  .join(DataSet) \
                                  .filter(DataSet.subject_id == user_mention.id) \
-                                 .filter(DataSet.server_id == ctx.message.server.id) \
+                                 .filter(DataSet.server_id == ctx.message.guild.id) \
                                  .filter(TrainingJob.status == 'Finished') \
                                  .order_by(TrainingJob.id.desc()) \
                                  .first()
