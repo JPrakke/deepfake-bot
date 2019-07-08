@@ -1,7 +1,7 @@
 import uuid, gzip, boto3
 import datetime as dt
-from bot import queries
-from common.config import *
+from robot import queries
+from robot.config import *
 
 
 # Need to make this a background task
@@ -48,14 +48,15 @@ async def extract_and_analyze(ctx, user_mention, bot):
     print(f'Files uploaded to S3: {extraction_id}. Time elapsed = {end_time - start_time}')
 
     # Add to database
-    queries.create_dataset(ctx, user_mention, extraction_id)
+    session = bot.get_cog('ConnectionManager').session
+    queries.create_dataset(session, ctx, user_mention, extraction_id)
 
     # Cleanup local disk
     os.remove(text_file_name)
     os.remove(channel_file_name)
 
     # Bot reply
-    await ctx.message.channel.send(f'Analysis complete for {user_mention}. Found {message_counter} messages.')
+    await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages.')
 
 
 def upload_to_s3(file_name):

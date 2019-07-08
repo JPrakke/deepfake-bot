@@ -1,28 +1,15 @@
-import common.config
-from common.tables import *
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 import datetime as dt
-
-# Setup connection
-global conn, session
-print('Connecting to database...')
-engine = create_engine(common.config.database_url)
-conn = engine.connect()
-session = Session(engine)
-
-# Keep the connection open in case the bot is idle
-engine.execute('SET SESSION wait_timeout=31536000')
+from robot.schema import *
+from robot.config import *
+from sqlalchemy import create_engine
 
 
-# WIP....
-def check_connection():
+def check_connection(session):
     result = session.query(Trainer).all()
     print(f'Connected... # of registered users: {len(result)}')
 
 
-def register_if_not_already(ctx):
+def register_if_not_already(session, ctx):
     id_to_check = int(ctx.message.author.id)
     result = session.query(Trainer) \
         .filter(Trainer.discord_id == id_to_check) \
@@ -39,7 +26,7 @@ def register_if_not_already(ctx):
         session.commit()
 
 
-def create_dataset(ctx, user_mention, uid):
+def create_dataset(session, ctx, user_mention, uid):
     new_dataset = DataSet(
         trainer_id=int(ctx.message.author.id),
         subject_id=int(user_mention.id),
@@ -52,7 +39,7 @@ def create_dataset(ctx, user_mention, uid):
     session.commit()
 
 
-def get_latest_dataset(ctx, user_mention):
+def get_latest_dataset(session, ctx, user_mention):
     result = session.query(DataSet)\
         .filter(DataSet.subject_id == int(user_mention.id))\
         .filter(DataSet.server_id == int(ctx.message.guild.id))\
@@ -70,7 +57,7 @@ def get_latest_dataset(ctx, user_mention):
         return False
 
 
-def get_latest_model(ctx, user_mention):
+def get_latest_model(session, ctx, user_mention):
     """Returns a data_uid and job_ib from the latest finished training job"""""
     latest_finished_job = session.query(TrainingJob) \
                                  .join(DataSet) \
@@ -93,7 +80,9 @@ def get_latest_model(ctx, user_mention):
 
 def make_tables():
     sql = 'DROP TABLE IF EXISTS training_jobs, trainers, data_sets;'
+    engine = create_engine(database_url)
     engine.execute(sql)
+    conn = engine.connect()
     Base.metadata.create_all(conn, checkfirst=False)
 
 

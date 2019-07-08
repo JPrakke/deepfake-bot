@@ -4,7 +4,7 @@ import s3fs
 import datetime as dt
 import numpy as np
 import matplotlib.dates as mdates
-import common.config
+import robot.config
 from pandas.plotting import register_matplotlib_converters
 
 register_matplotlib_converters()
@@ -51,9 +51,9 @@ def auto_time_scale(td):
 
 
 def generate(data_id, user_name):
-    s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
-                           secret=common.config.aws_secret_access_key)
-    with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
+                           secret=robot.config.aws_secret_access_key)
+    with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
@@ -90,9 +90,9 @@ def generate(data_id, user_name):
 
 
 def bar_charts(data_id, user_name):
-    s3 = s3fs.S3FileSystem(key=common.config.aws_access_key_id,
-                           secret=common.config.aws_secret_access_key)
-    with s3.open(f'{common.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
+                           secret=robot.config.aws_secret_access_key)
+    with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))

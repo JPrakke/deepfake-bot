@@ -2,8 +2,7 @@ from discord import utils
 import s3fs
 import gzip
 import boto3
-from common.config import *
-from bot import queries
+from robot.config import *
 from textgenrnn import textgenrnn
 
 
