@@ -2,8 +2,7 @@ from discord import utils
 import s3fs
 import gzip
 import boto3
-from common.config import *
-from bot import queries
+from robot.config import *
 from textgenrnn import textgenrnn
 
 
@@ -82,4 +81,4 @@ async def infer(ctx, data_uid, job_id, bot):
 
     print('Model files read. Generating...')
     result = model.generate(return_as_list=True)[0]
-    await bot.send_message(ctx.message.channel, result)
+    await ctx.message.channel.send(result)
