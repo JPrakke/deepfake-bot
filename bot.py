@@ -6,8 +6,6 @@ from robot import botutils
 from robot.db_connection import ConnectionManager
 from robot.plot_commands import PlotCommands
 
-app = commands.Bot(command_prefix='df!')
-
 
 class DeepFakeBot(commands.Cog):
     def __init__(self, bot):
@@ -64,6 +62,12 @@ class DeepFakeBot(commands.Cog):
                 )
 
 
+app = commands.Bot(command_prefix='df!')
+app.add_cog(ConnectionManager(app))
+app.add_cog(DeepFakeBot(app))
+app.add_cog(PlotCommands(app))
+
+
 @app.event
 async def on_message(message):
     await app.process_commands(message)
@@ -73,9 +77,6 @@ async def on_message(message):
 class WSGIApp:
     def __call__(self, *args, **kwargs):
         token = os.environ.get('DEEPFAKE_DISCORD_TOKEN')
-        app.add_cog(ConnectionManager(app))
-        app.add_cog(DeepFakeBot(app))
-        app.add_cog(PlotCommands(app))
         app.run(token)
 
 
