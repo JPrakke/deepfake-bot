@@ -9,6 +9,10 @@ def check_connection(session):
     print(f'Connected... # of registered users: {len(result)}')
 
 
+def ping_connection(session):
+    session.query(Trainer).first()
+
+
 def register_if_not_already(session, ctx):
     id_to_check = int(ctx.message.author.id)
     result = session.query(Trainer) \

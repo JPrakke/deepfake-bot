@@ -10,13 +10,17 @@ from robot import plot_activity
 class PlotCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.parent_cog = self.bot.get_cog('DeepFakeBot')
+        self.session = self.parent_cog.session
+
+    async def cog_check(self, ctx):
+        connection_ok = self.parent_cog.cog_check(ctx)
+        self.session = self.parent_cog.session
+        return connection_ok
 
     @commands.command()
     async def wordcloud(self, ctx, *args):
         """Uploads a wordcloud image if a dataset exists for the mentioned subject"""
-
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
 
         if len(args) == 1:
             subject_string = args[0]
@@ -35,7 +39,7 @@ class PlotCommands(commands.Cog):
 
         subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'wordcloud')
         if subject:
-            data_id = queries.get_latest_dataset(session, ctx, subject)
+            data_id = queries.get_latest_dataset(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
                       f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
@@ -52,12 +56,10 @@ class PlotCommands(commands.Cog):
     async def activity(self, ctx, *args):
         """Uploads a time series and bar charts image if a dataset exists for the mentioned subject"""
 
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
         subject_string = args[0]
         subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'activity')
         if subject:
-            data_id = queries.get_latest_dataset(session, ctx, subject)
+            data_id = queries.get_latest_dataset(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
                       f'I can\'t find a data set for {subject_string[0]}. Try: `df!extract User#0000` first')
@@ -83,12 +85,10 @@ class PlotCommands(commands.Cog):
     @commands.command()
     async def dirtywordcloud(self, ctx, *args):
         """Uploads a wordcloud image of curse words if a dataset exists for the mentioned subject"""
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
         subject_string = args[0]
         subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'dirtywordcloud')
         if subject:
-            data_id = queries.get_latest_dataset(session, ctx, subject)
+            data_id = queries.get_latest_dataset(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
                                    f'I can\'t find a data set for {subject_string}. Try: `df!extract User#0000` first')
@@ -108,17 +108,19 @@ class PlotCommands(commands.Cog):
     async def countword(self, ctx, *args):
         """Counts the number of times a subject has used a word."""
         channel = ctx.message.channel
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
 
         if len(args) is not 2:
-            await ctx.message.channel.send('Usage: `df!wordcount <User#0000> <word>`')
+            await ctx.message.channel.send('Usage: `df!countword <User#0000> <word>`')
             return
 
         subject_string = args[0]
         word = args[1]
         subject, _ = botutils.get_subject(self.bot, ctx, subject_string, '')
-        data_id = queries.get_latest_dataset(session, ctx, subject)
-
-        count = botutils.count_word(data_id, word)
-        await channel.send(f"User {subject_string} has said {word} {count} times.")
+        if subject:
+            data_id = queries.get_latest_dataset(self.session, ctx, subject)
+            if not data_id:
+                await ctx.message.channel.send(
+                                   f'I can\'t find a data set for {subject_string}. Try: `df!extract User#0000` first')
+            else:
+                count = botutils.count_word(data_id, word)
+                await channel.send(f"User {subject_string} has said {word} {count} times.")

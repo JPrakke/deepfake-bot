@@ -1,7 +1,10 @@
-import uuid, gzip, boto3
+import uuid
+import gzip
+import boto3
 import datetime as dt
 from robot import queries
 from robot.config import *
+import discord
 
 
 # Need to make this a background task
@@ -51,12 +54,14 @@ async def extract_and_analyze(ctx, user_mention, bot):
     session = bot.get_cog('ConnectionManager').session
     queries.create_dataset(session, ctx, user_mention, extraction_id)
 
+    # Bot reply
+    await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages:',
+                                   files=[discord.File(text_file_name),
+                                          discord.File(channel_file_name)])
+
     # Cleanup local disk
     os.remove(text_file_name)
     os.remove(channel_file_name)
-
-    # Bot reply
-    await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages.')
 
 
 def upload_to_s3(file_name):

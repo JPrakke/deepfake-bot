@@ -4,12 +4,28 @@ from robot import extract
 from robot import queries
 from robot import botutils
 from robot.db_connection import ConnectionManager
+from robot.db_connection import DeepFakeBotConnectionError
 from robot.plot_commands import PlotCommands
 
 
 class DeepFakeBot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.session = None
+
+    async def cog_check(self, ctx):
+        """Refreshes the database connection and registers the user if not already done."""
+        connection_manager = self.bot.get_cog('ConnectionManager')
+        try:
+            connection_manager.refresh_connection()
+        except DeepFakeBotConnectionError:
+            await ctx.message.channel.send(
+                  'Ruh roh! I seem to be having some issues. Try running that command again later')
+            return False
+
+        self.session = connection_manager.session
+        queries.register_if_not_already(self.session, ctx)
+        return True
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -17,14 +33,6 @@ class DeepFakeBot(commands.Cog):
         print(self.bot.user.name)
         print(self.bot.user.id)
         print('------')
-
-    @commands.command(hidden=True)
-    async def kill_app(self):
-        connection_manager = self.bot.get_cog('ConnectionManager')
-        if connection_manager is not None:
-            connection_manager.close_db_connection()
-
-        await self.bot.close()
 
     @commands.command()
     async def repeat(self, ctx, msg):
@@ -37,8 +45,6 @@ class DeepFakeBot(commands.Cog):
     async def extract(self, ctx, *args):
         """Extracts chat history of a subject"""
 
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
         try:
             subject_string = args[0]
         except IndexError:
@@ -56,12 +62,10 @@ class DeepFakeBot(commands.Cog):
 
     @commands.command()
     async def reply_as(self, ctx, *args):
-        session = self.bot.get_cog('ConnectionManager').session
-        queries.register_if_not_already(session, ctx)
         subject_string = args[0]
         subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'infer')
         if subject:
-            data_uid, job_id = queries.get_latest_model(session, ctx, subject)
+            data_uid, job_id = queries.get_latest_model(self.bot.session, ctx, subject)
             if not job_id:
                 await ctx.message.channel.send(f'Sorry, I can\'t find a model for {subject_string}')
             else:
@@ -89,14 +93,6 @@ def run_app():
         print('DeepfakeBot: Failed start attempt. I may have already been running.')
         print(e)
 
-
-# Needed for the WSGI script in elastic beanstalk
-class WSGIApp:
-    def __call__(self, *args, **kwargs):
-        run_app()
-
-
-application = WSGIApp()
 
 if __name__ == '__main__':
     run_app()
