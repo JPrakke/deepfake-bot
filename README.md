@@ -2,7 +2,7 @@
 
 (work in progress...)
 
-### *"That's kinda creepy"* ... *"why do i sound like i have a speech peppermint?"* 
+### *"That's kinda creepy"* 
 
 Make copies of your friends! Using the magic of cloud computing, [markov]() chains and a little data analytics, you can create a [deepfake]() of another discord user.
 
@@ -17,6 +17,7 @@ Make copies of your friends! Using the magic of cloud computing, [markov]() chai
 Once you're happy with the results, the bot will message your model artifacts to you and you'll be ready to deploy!
 
 ## Deployment
+### *"why do i sound like i have a speech peppermint?"*
 
 Before you get started, you will need:
 * A Github account (to fork this project) 

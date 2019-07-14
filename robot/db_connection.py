@@ -14,3 +14,8 @@ class ConnectionManager(commands.Cog):
         self.conn = self.engine.connect()
         self.session = Session(self.engine)
         robot.queries.check_connection(self.session)
+
+    def close_db_connection(self):
+        self.conn.close()
+        self.session.close()
+        self.engine.dispose()
