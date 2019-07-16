@@ -6,6 +6,7 @@ from robot import botutils
 from robot.db_connection import ConnectionManager
 from robot.db_connection import DeepFakeBotConnectionError
 from robot.plot_commands import PlotCommands
+from robot.model_commands import ModelCommands
 
 
 class DeepFakeBot(commands.Cog):
@@ -78,6 +79,7 @@ app = commands.Bot(command_prefix='df!')
 app.add_cog(ConnectionManager(app))
 app.add_cog(DeepFakeBot(app))
 app.add_cog(PlotCommands(app))
+app.add_cog(ModelCommands(app))
 
 
 @app.event

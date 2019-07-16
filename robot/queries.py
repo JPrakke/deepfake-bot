@@ -43,6 +43,7 @@ def create_dataset(session, ctx, user_mention, uid):
     session.commit()
 
 
+# TODO: update bucket policy and add a check here that the dataset is not expired
 def get_latest_dataset(session, ctx, user_mention):
     result = session.query(DataSet)\
         .filter(DataSet.subject_id == int(user_mention.id))\

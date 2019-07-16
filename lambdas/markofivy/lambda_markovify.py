@@ -5,6 +5,7 @@ import os
 import gzip
 
 
+# TODO: upload model artifacts to S3
 def lambda_handler(event, context):
     # Read in arguments / event data
     data_uid = event['data_uid']
@@ -39,10 +40,10 @@ def lambda_handler(event, context):
 
     # Generate the model
     if new_line:
-        text_model = markovify.NewlineText('\n'.join(content),
+        text_model = markovify.NewlineText('\n'.join(filtered_content),
                                            state_size=state_size)
     else:
-        text_model = markovify.Text('\n'.join(content),
+        text_model = markovify.Text('\n'.join(filtered_content),
                                     state_size=state_size)
 
     # Generate responses
@@ -52,10 +53,5 @@ def lambda_handler(event, context):
 
     return {
         'statusCode': 200,
-        'body': json.dumps(responses)
+        'body': responses
     }
-
-
-if __name__ == '__main__':
-    a = lambda_handler(None, None)
-    print(a)

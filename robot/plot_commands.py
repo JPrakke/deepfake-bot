@@ -14,7 +14,7 @@ class PlotCommands(commands.Cog):
         self.session = self.parent_cog.session
 
     async def cog_check(self, ctx):
-        connection_ok = self.parent_cog.cog_check(ctx)
+        connection_ok = await self.parent_cog.cog_check(ctx)
         self.session = self.parent_cog.session
         return connection_ok
 
