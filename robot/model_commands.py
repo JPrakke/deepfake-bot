@@ -20,7 +20,7 @@ class ModelCommands(commands.Cog):
     async def markovify_request(self, ctx, bot, subject_string, data_uid, filters, state_size, new_line):
         await bot.wait_until_ready()
 
-        client = boto3.client('lambda')
+        client = boto3.client('lambda', region_name='us-east-1')
 
         request_data = {
             "data_uid": data_uid,
@@ -31,6 +31,7 @@ class ModelCommands(commands.Cog):
         }
 
         payload = json.dumps(request_data)
+        print(payload)
 
         response = client.invoke(
             FunctionName='deepfake-bot-markovify',
@@ -45,6 +46,7 @@ class ModelCommands(commands.Cog):
         try:
             status_code = res_json['statusCode']
         except KeyError:
+            print(res_json)
             status_code = 0
 
         if status_code == 200:

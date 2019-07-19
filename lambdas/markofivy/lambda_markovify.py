@@ -28,15 +28,18 @@ def lambda_handler(event, context):
             split('11a4b96a-ae8a-45f9-a4db-487cda63f5bd')
 
     # Apply filters
-    filtered_content = []
-    for i in content:
-        include = True
-        for j in filters:
-            if j in i:
-                include = False
-                break
-        if include:
-            filtered_content.append(i)
+    if filters == ['']:
+        filtered_content = content
+    else:
+        filtered_content = []
+        for i in content:
+            include = True
+            for j in filters:
+                if j in i:
+                    include = False
+                    break
+            if include:
+                filtered_content.append(i)
 
     # Generate the model
     if new_line:
