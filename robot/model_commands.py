@@ -75,7 +75,7 @@ class ModelCommands(commands.Cog):
             data_id = queries.get_latest_dataset(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
+                      f'I can\'t find a data set for {subject_string}. Try: `df!extract User#0000` first')
             else:
                 await ctx.message.channel.send('Markovify request submitted!')
                 self.bot.loop.create_task(

@@ -18,7 +18,7 @@ async def extract_and_analyze(ctx, user_mention, bot):
     channels = []
     timestamps = []
     message_counter = 0
-    print(f'Extracting chat history for {user_mention}...')
+    print(f'Extracting chat history for {user_mention}... (This could take a few minutes).')
     start_time = dt.datetime.now()
     with gzip.open(text_file_name, 'wb') as f:
         for channel in ctx.message.guild.channels:

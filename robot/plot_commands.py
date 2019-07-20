@@ -42,7 +42,7 @@ class PlotCommands(commands.Cog):
             data_id = queries.get_latest_dataset(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject_string}. Try: `df!analyze User#0000` first')
+                      f'I can\'t find a data set for {subject_string}. Try: `df!extract User#0000` first')
             else:
                 file_name, n_messages, n_filtered = plot_wordcloud.generate(data_id, filters)
                 await ctx.message.channel.send(f'Here are {subject_string}\'s favorite words:',
