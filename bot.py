@@ -54,7 +54,9 @@ class DeepFakeBot(commands.Cog):
 
         subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'extract')
         if subject:
-            await ctx.message.channel.send(f'Extracting chat history for {subject.name}...')
+            await ctx.message.channel.send(
+                  f'Extracting chat history for {subject.name}... (This could take a few minutes).'
+            )
             self.bot.loop.create_task(
                 extract.extract_and_analyze(ctx, subject, self.bot)
             )
