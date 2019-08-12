@@ -1,6 +1,6 @@
+import discord
 from discord.ext import commands
 from robot import queries
-from robot import botutils
 import boto3
 import json
 
@@ -11,6 +11,8 @@ class ModelCommands(commands.Cog):
         self.bot = bot
         self.parent_cog = self.bot.get_cog('DeepFakeBot')
         self.session = self.parent_cog.session
+        self.state_size = 3
+        self.newline = False
 
     async def cog_check(self, ctx):
         connection_ok = await self.parent_cog.cog_check(ctx)
@@ -24,7 +26,7 @@ class ModelCommands(commands.Cog):
 
         request_data = {
             "data_uid": data_uid,
-            "filters": filters.split(','),
+            "filters": filters,
             "state_size": state_size,
             "new_line": new_line,
             "number_responses": 25
@@ -65,21 +67,53 @@ class ModelCommands(commands.Cog):
                   'Hmm... I seem to be having some issues processing your `markovify` request. Maybe try again.'
             )
 
-    @commands.command()
-    async def markovify(self, ctx, subject_string, state_size=3, new_line=False, filters=''):
+    @commands.group(name='markovify')
+    async def markovify(self, ctx):
+        """Markov chain generator commands"""
+        pass
+
+    @markovify.command()
+    async def generate(self, ctx, *, subject: discord.Member):
         """Generates a markov chain model and sample responses in the style of your subject"""
-
-        subject, error_message = botutils.get_subject(self.bot, ctx, subject_string, 'markofivy')
-
         if subject:
             data_id = queries.get_latest_dataset(self.session, ctx, subject)
+            filters = queries.find_filters(self.session, ctx, subject)
             if not data_id:
                 await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject_string}. Try: `df!extract User#0000` first')
+                      f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
             else:
                 await ctx.message.channel.send('Markovify request submitted!')
                 self.bot.loop.create_task(
-                    self.markovify_request(ctx, self.bot, subject_string, data_id, filters, state_size, new_line)
+                    self.markovify_request(ctx, self.bot, subject.name, data_id, filters, self.state_size, self.newline)
                 )
         else:
-            await ctx.message.channel.send(error_message)
+            await ctx.message.channel.send(f'Usage: `df!markovify User#0000`')
+
+    @markovify.group(name='newline')
+    async def newline(self, ctx):
+        """Sets newline to on/off"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send('Usage: `df!markovify newline <off/on>`')
+
+    @newline.command()
+    async def off(self, ctx):
+        self.newline = False
+        await ctx.send('markovify newline off')
+
+    @newline.command()
+    async def on(self, ctx):
+        self.newline = True
+        await ctx.send('markovify newline on')
+
+    @markovify.command()
+    async def state_size(self, ctx, new_value: int):
+        """Changes the state size. Default value is 3. Smaller values tend to generate more chaotic sentences."""
+        old_value = self.state_size
+        self.state_size = new_value
+        await ctx.send(f'Markovify state size changed from {old_value} to {new_value}')
+
+    @markovify.command()
+    async def settings(self, ctx):
+        """Displays the current markovify settings."""
+        await ctx.send(f'state size: {self.state_size}')
+        await ctx.send(f'newline: {self.newline}')

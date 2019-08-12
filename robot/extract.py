@@ -8,7 +8,7 @@ import discord
 
 
 # Need to make this a background task
-async def extract_and_analyze(ctx, user_mention, bot):
+async def extract_chat_history(ctx, user_mention, bot):
     await bot.wait_until_ready()
 
     extraction_id = str(uuid.uuid4().hex)
@@ -52,7 +52,7 @@ async def extract_and_analyze(ctx, user_mention, bot):
 
     # Add to database
     session = bot.get_cog('ConnectionManager').session
-    queries.create_dataset(session, ctx, user_mention, extraction_id)
+    queries.create_data_set(session, user_mention, extraction_id)
 
     # Bot reply
     await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages:',

@@ -3,7 +3,6 @@ import s3fs
 import gzip
 import boto3
 from robot.config import *
-from textgenrnn import textgenrnn
 
 
 # Use this to identify a user by mention or name#discriminator
@@ -44,41 +43,3 @@ def count_word(data_id, word):
     expr = f'[ ]{word.lower()}[.!? ]'
     reg = re.compile(expr)
     return len(reg.findall(content.lower()))
-
-
-# Copies model files from S3 to tmp folder
-def download_model_files(data_uid, job_id):
-    weights_file_name = f'{data_uid}-{str(job_id)}_weights.hdf5'
-    vocab_file_name = f'{data_uid}-{str(job_id)}_vocab.json'
-    config_file_name = f'{data_uid}-{str(job_id)}_config.json'
-
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=aws_access_key_id,
-                        aws_secret_access_key=aws_secret_access_key)
-
-    s3.Bucket(aws_s3_bucket_prefix).download_file(weights_file_name, f'./tmp/{weights_file_name}')
-    s3.Bucket(aws_s3_bucket_prefix).download_file(vocab_file_name, f'./tmp/{vocab_file_name}')
-    s3.Bucket(aws_s3_bucket_prefix).download_file(config_file_name, f'./tmp/{config_file_name}')
-
-
-# Need to make this a background task
-async def infer(ctx, data_uid, job_id, bot):
-    await bot.wait_until_ready()
-
-    print(f'Loading model...')
-    download_model_files(data_uid, job_id)
-    print('Model downloaded...')
-    weights_file_name = f'{data_uid}-{str(job_id)}_weights.hdf5'
-    vocab_file_name = f'{data_uid}-{str(job_id)}_vocab.json'
-    config_file_name = f'{data_uid}-{str(job_id)}_config.json'
-
-    # TODO: optimize this..., pre-load available models as a background test
-    model = textgenrnn(name=f'{data_uid}-{str(job_id)}',
-                       weights_path=f'./tmp/{weights_file_name}',
-                       vocab_path=f'./tmp/{vocab_file_name}',
-                       config_path=f'./tmp/{config_file_name}'
-                       )
-
-    print('Model files read. Generating...')
-    result = model.generate(return_as_list=True)[0]
-    await ctx.message.channel.send(result)

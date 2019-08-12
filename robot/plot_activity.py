@@ -31,21 +31,21 @@ def day_filler(dates, counts):
 
 def auto_time_scale(td):
 
-    if td.days < 1:
-        date_format = mdates.DateFormatter('%H:%M:%S')
-        major_tick = mdates.HourLocator()
-    elif td.days < 7:
-        date_format = mdates.DateFormatter('%d %b-%Y')
-        major_tick = mdates.DayLocator()
-    elif td.days < 30:
-        date_format = mdates.DateFormatter('%d %b-%Y')
-        major_tick = mdates.DayLocator(interval=7)
-    elif td.days < 365:
-        date_format = mdates.DateFormatter('%b-%Y')
-        major_tick = mdates.MonthLocator()
-    else:
+    if td._m > 12:
         date_format = mdates.DateFormatter('%Y')
         major_tick = mdates.YearLocator()
+    elif td._m > 1:
+        date_format = mdates.DateFormatter('%b-%Y')
+        major_tick = mdates.MonthLocator()
+    elif td.days > 7:
+        date_format = mdates.DateFormatter('%d %b-%Y')
+        major_tick = mdates.DayLocator(interval=7)
+    elif td.days > 1:
+        date_format = mdates.DateFormatter('%d %b-%Y')
+        major_tick = mdates.DayLocator()
+    else:
+        date_format = mdates.DateFormatter('%H:%M:%S')
+        major_tick = mdates.HourLocator()
 
     return date_format, major_tick
 
