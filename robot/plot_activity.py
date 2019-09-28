@@ -6,19 +6,20 @@ import numpy as np
 import matplotlib.dates as mdates
 import robot.config
 from pandas.plotting import register_matplotlib_converters
+from matplotlib import cm
 
 register_matplotlib_converters()
 
 
-def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + dt.timedelta(n)
-
-
 def day_filler(dates, counts):
+    """Returns completed lists of dates and message counts with 0's added to every day with no messages"""
+    def date_range(start_date, end_date):
+        for n in range(int((end_date - start_date).days)):
+            yield start_date + dt.timedelta(n)
+
     filled_dates = []
     filled_counts = []
-    for single_date in daterange(dates.min(), dates.max()):
+    for single_date in date_range(dates.min(), dates.max()):
         filled_dates.append(single_date)
         if single_date in dates:
             i = np.where(dates == single_date)
@@ -30,11 +31,11 @@ def day_filler(dates, counts):
 
 
 def auto_time_scale(td):
-
-    if td._m > 12:
+    """Used to format the x-axis based on the length of time to be plotted"""
+    if td.days > 365:
         date_format = mdates.DateFormatter('%Y')
         major_tick = mdates.YearLocator()
-    elif td._m > 1:
+    elif td.days > 30:
         date_format = mdates.DateFormatter('%b-%Y')
         major_tick = mdates.MonthLocator()
     elif td.days > 7:
@@ -50,14 +51,17 @@ def auto_time_scale(td):
     return date_format, major_tick
 
 
-def generate(data_id, user_name):
+def time_series_chart(data_id, user_name):
+    """Plots a user's activity over time. I.e. number of messages vs. date"""
+
+    # Open our file from S3 and read in the data
     s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
                            secret=robot.config.aws_secret_access_key)
     with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
+    # Some data transformations
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
-    df['day'] = df['datetime'].apply(lambda t: t.weekday())
     df['date'] = df['datetime'].apply(lambda t: t.date())
 
     ch_gb = df.groupby('date')
@@ -66,6 +70,7 @@ def generate(data_id, user_name):
 
     filled_dates, filled_counts = day_filler(message_dates, message_counts)
 
+    # Make the time series plots
     fig, ax = plt.subplots()
     fig.set_figheight(7)
     fig.set_figwidth(10)
@@ -74,8 +79,8 @@ def generate(data_id, user_name):
     ax.set_title(f'{user_name}\'s Activity')
     ax.set_ylabel('# messages')
 
-    date_range = df['datetime'].iloc[0] - df['datetime'].iloc[len(df)-1]
-    auto_format, auto_tick = auto_time_scale(date_range)
+    message_date_range = df['datetime'].max() - df['datetime'].min()
+    auto_format, auto_tick = auto_time_scale(message_date_range)
 
     ax.xaxis.set_major_formatter(auto_format)
     ax.xaxis.set_major_locator(auto_tick)
@@ -89,60 +94,45 @@ def generate(data_id, user_name):
     return file_name
 
 
-def bar_charts(data_id, user_name):
+def pie_charts(data_id, user_name):
+    """Plots a user's most active channels and days of the week"""
+
+    # Open our file from S3 and read in the data
     s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
                            secret=robot.config.aws_secret_access_key)
     with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
+    # Some data transformations
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
-    df['day'] = df['datetime'].apply(lambda t: t.weekday())
+    df['day'] = df['datetime'].apply(lambda t: t.strftime("%A"))
     df['date'] = df['datetime'].apply(lambda t: t.date())
 
-    # Don't make bar charts if only one channel
-    if len(df['channel'].unique()) < 2:
-        return False, False
-
     ch_gb = df.groupby('channel')
+    day_gb = df.groupby('day')
 
-    bar_labels = ch_gb['timestamp'].count().index.values
-    bar_values = ch_gb['timestamp'].count().values
+    pie_labels = ch_gb['timestamp'].count().index.values
+    pie_values = ch_gb['timestamp'].count().values
 
-    bar_values, bar_labels = (list(t) for t in zip(*sorted(zip(bar_values, bar_labels),
-                                                           reverse=True)))
+    day_labels = day_gb['timestamp'].count().index.values
+    day_values = day_gb['timestamp'].count().values
 
+    # Make the channels pie chart
     fig, ax = plt.subplots()
-    fig.set_figheight(7)
-    fig.set_figwidth(10)
-    plt.subplots_adjust(bottom=0.2)
-
-    ax.bar(bar_labels, bar_values)
+    color_scale = cm.Blues(np.flip(np.arange(pie_labels.size)) / pie_labels.size)
+    ax.pie(pie_values, labels=pie_labels, autopct='%1.1f%%', explode=[0.05]*pie_labels.size, colors=color_scale)
     ax.set_title(f'{user_name}\'s Favorite Channels')
-    ax.set_ylabel('# messages')
-    ax.grid()
 
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
+    file_name_channels = f'./tmp/{data_id}-pie-chart-channels.png'
+    fig.savefig(file_name_channels)
 
-    file_name = f'./tmp/{data_id}-bar-chart.png'
-    fig.savefig(file_name)
-
-    # Log scale plot to show all the channels clearer
+    # Make the days of the week pie chart
     fig, ax = plt.subplots()
-    fig.set_figheight(7)
-    fig.set_figwidth(10)
-    plt.subplots_adjust(bottom=0.2)
+    color_scale = cm.Blues(np.flip(np.arange(day_labels.size)) / day_labels.size)
+    ax.pie(day_values, labels=day_labels, autopct='%1.1f%%', explode=[0.05]*day_labels.size, colors=color_scale)
+    ax.set_title(f'{user_name}\'s Most Active Days')
 
-    ax.bar(bar_labels, bar_values)
-    ax.set_title(f'{user_name}\'s Favorite Channels\n (log scale)')
-    ax.set_ylabel('# messages')
-    ax.set_yscale('log')
-    ax.grid()
+    file_name_days = f'./tmp/{data_id}-pie-chart-days.png'
+    fig.savefig(file_name_days)
 
-    for tick in ax.get_xticklabels():
-        tick.set_rotation(45)
-
-    file_name_log = f'./tmp/{data_id}-bar-chart-log.png'
-    fig.savefig(file_name_log)
-
-    return file_name, file_name_log
+    return file_name_channels, file_name_days

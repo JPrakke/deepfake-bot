@@ -7,6 +7,7 @@ import robot.config
 
 
 def get_frequency_dict(sentence):
+    """Converts raw text into a multidict for wordcloud usage"""
     full_terms_dict = multidict.MultiDict()
     tmp_dict = {}
 
@@ -22,6 +23,7 @@ def get_frequency_dict(sentence):
 
 
 def apply_filters(content, filters):
+    """Filters messages based on a list of words. If a filter word is present in a message, that message is removed."""
     if filters == ['']:
         return content
 
@@ -39,6 +41,7 @@ def apply_filters(content, filters):
 
 
 def get_s3_content(data_id):
+    """Reads in data from S3 file"""
     s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
                            secret=robot.config.aws_secret_access_key)
     with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
@@ -49,7 +52,7 @@ def get_s3_content(data_id):
 
 
 def generate_dirty(data_id):
-
+    """Makes a word cloud of swear words for a subject. No filters applied."""
     content = ' '.join(get_s3_content(data_id))
 
     swear_path = './robot/resources/swearWords.txt'
@@ -81,7 +84,7 @@ def generate_dirty(data_id):
 
 
 def generate(data_id, filters):
-
+    """Makes a wordcloud of a user's messages with filters applied"""
     content = get_s3_content(data_id)
     selected_content = apply_filters(content, filters)
 

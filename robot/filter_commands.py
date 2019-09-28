@@ -22,8 +22,11 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     async def add(self, ctx, subject: discord.Member, word_to_add):
-        queries.add_a_filter(self.session, ctx, subject, word_to_add)
-        await ctx.send(f'Added text filter `{word_to_add}` to `{subject.name}` for this server.')
+        if len(word_to_add) < 256:
+            queries.add_a_filter(self.session, ctx, subject, word_to_add)
+            await ctx.send(f'Added text filter `{word_to_add}` to `{subject.name}` for this server.')
+        else:
+            await ctx.send('Filters need to be 255 characters or less.')
 
     @filter.command()
     async def remove(self, ctx, subject: discord.Member, word_to_drop):
