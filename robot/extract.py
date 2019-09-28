@@ -52,7 +52,7 @@ async def extract_chat_history(ctx, user_mention, bot):
 
     # Add to database
     session = bot.get_cog('ConnectionManager').session
-    queries.create_data_set(session, user_mention, extraction_id)
+    queries.create_data_set(session, ctx, user_mention, extraction_id)
 
     # Bot reply
     await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages:',

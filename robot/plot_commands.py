@@ -22,11 +22,8 @@ class PlotCommands(commands.Cog):
     async def wordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image if a data set has been extracted for the mentioned subject"""
         if subject:
-            data_id = queries.get_latest_dataset(self.session, ctx, subject)
-            if not data_id:
-                await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
-            else:
+            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            if data_id:
                 filters = queries.find_filters(self.session, ctx, subject)
                 file_name, n_messages, n_filtered = plot_wordcloud.generate(data_id, filters)
                 await ctx.message.channel.send(f'Here are {subject.name}\'s favorite words:',
@@ -41,11 +38,8 @@ class PlotCommands(commands.Cog):
         """Uploads a time series and bar charts image if a dataset exists for the mentioned subject"""
 
         if subject:
-            data_id = queries.get_latest_dataset(self.session, ctx, subject)
-            if not data_id:
-                await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
-            else:
+            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            if data_id:
                 file_name = plot_activity.generate(data_id, subject.name)
                 await ctx.message.channel.send('', file=discord.File(file_name, file_name))
                 os.remove(file_name)
@@ -68,11 +62,8 @@ class PlotCommands(commands.Cog):
     async def dirtywordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image of curse words if a dataset has been extracted for the mentioned subject"""
         if subject:
-            data_id = queries.get_latest_dataset(self.session, ctx, subject)
-            if not data_id:
-                await ctx.message.channel.send(
-                                   f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
-            else:
+            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            if data_id:
                 file_name = plot_wordcloud.generate_dirty(data_id)
                 if file_name:
                     await ctx.message.channel.send(f'Here are {subject.name}\'s favorite curse words:')
@@ -90,10 +81,7 @@ class PlotCommands(commands.Cog):
         channel = ctx.message.channel
 
         if subject and word:
-            data_id = queries.get_latest_dataset(self.session, ctx, subject)
-            if not data_id:
-                await ctx.message.channel.send(
-                                   f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
-            else:
+            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            if data_id:
                 count = botutils.count_word(data_id, word)
                 await channel.send(f"User {subject.name} has said {word} {count} times.")

@@ -11,7 +11,7 @@ class Trainer(Base):
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
     user_name = Column(String(255))
-    time_registered = Column(Integer)
+    time_registered = Column(DateTime)
 
 
 class Subject(Base):
@@ -28,7 +28,7 @@ class DataSet(Base):
     """Collected chat logs of our subjects"""
     __tablename__ = 'data_sets'
     id = Column(BigInteger, primary_key=True)
-    subject_id = Column(BigInteger, ForeignKey('subjects.discord_id'))
+    subject_id = Column(BigInteger, ForeignKey('subjects.id'))
     time_collected = Column(DateTime)
     data_uid = Column(String(32), unique=True)
     subject_foreign_key = relationship('Subject', foreign_keys=[subject_id])
@@ -60,5 +60,6 @@ class Deployment(Base):
     secret_key = Column(String(255))
     markov_id = Column(BigInteger, ForeignKey('markov_models.id'))
     trainer_id = Column(BigInteger, ForeignKey('trainers.id'))
+    hosted = Column(Boolean)
     markov_foreign_key = relationship('MarkovModel', foreign_keys=[markov_id])
     trainer_foreign_key = relationship('Trainer', foreign_keys=[trainer_id])

@@ -39,8 +39,8 @@ def register_subject(session, ctx, subject: discord.member):
     server_id_to_check = int(ctx.message.guild.id)
 
     result = session.query(Subject) \
-                    .filter(Subject.discord_id == user_id_to_check) \
-                    .filter(Subject.server_id == server_id_to_check) \
+                    .filter(Subject.discord_id == user_id_to_check,
+                            Subject.server_id == server_id_to_check) \
                     .all()
 
     # If no record exists, add one.
@@ -55,10 +55,16 @@ def register_subject(session, ctx, subject: discord.member):
         session.commit()
 
 
-def create_data_set(session, user_mention, uid):
+def create_data_set(session, ctx, user_mention, uid):
     """Adds a record for when a data set is created"""
+
+    subject_id = session.query(Subject) \
+                        .filter(Subject.discord_id == int(user_mention.id),
+                                Subject.server_id == int(ctx.message.guild.id))\
+                        .first().id
+
     new_data_set = DataSet(
-        subject_id=int(user_mention.id),
+        subject_id=subject_id,
         time_collected=dt.datetime.utcnow(),
         data_uid=uid
     )
@@ -66,34 +72,45 @@ def create_data_set(session, user_mention, uid):
     session.commit()
 
 
-# TODO: Update bucket policy and add a check here that the dataset is not expired
-def get_latest_dataset(session, ctx, user_mention):
+async def get_latest_dataset(session, ctx, user_mention):
     """Finds the most recent data set for a particular subject on a particular server. Returns False if no data found"""
-    result = session.query(Subject, DataSet) \
-                    .filter(Subject.discord_id == int(user_mention.id))\
-                    .filter(Subject.server_id == int(ctx.message.guild.id)) \
+    result = session.query(DataSet) \
+                    .join(Subject) \
+                    .filter(Subject.discord_id == int(user_mention.id),
+                            Subject.server_id == int(ctx.message.guild.id))\
                     .order_by(DataSet.id.desc()).first()
 
     try:
-        return result[1].data_uid
-    except (IndexError, TypeError):
+        data_set = result
+        if (dt.datetime.utcnow() - data_set.time_collected).days < 1:
+            return data_set.data_uid
+        else:
+            await ctx.message.channel.send(
+                  f'The only data set I found on this server for {user_mention.name} is expired.')
+            await ctx.message.channel.send(f'Try running `df!extract` again.')
+            # TODO: Add a link to data retention policy once it's done
+            return False
+    except (TypeError, AttributeError):
+        await ctx.message.channel.send(
+              f'I couldn\'t find a data set for {user_mention.name}. Try running `df!extract` first.')
         return False
 
 
 def add_a_filter(session, ctx, subject: discord.member, word_to_add):
     """Adds a text filter for a given subject"""
     register_subject(session, ctx, subject)
-    subject = session.query(Subject) \
-                     .filter(Subject.server_id == int(ctx.message.guild.id)) \
-                     .filter(Subject.discord_id == int(subject.id)) \
-                     .first()
 
     if session.query(TextFilter) \
-              .filter(TextFilter.subject_id == subject.id) \
-              .filter(TextFilter.word == word_to_add) \
+              .join(Subject) \
+              .filter(TextFilter.word == word_to_add,
+                      Subject.server_id == int(ctx.message.guild.id),
+                      Subject.discord_id == int(subject.id)) \
               .count() == 0:
         filter_record = TextFilter(
-            subject_id=subject.id,
+            subject_id=session.query(Subject)
+                              .filter(Subject.server_id == int(ctx.message.guild.id),
+                                      Subject.discord_id == int(subject.id))
+                              .first().id,
             word=word_to_add
         )
         session.add(filter_record)
@@ -103,14 +120,11 @@ def add_a_filter(session, ctx, subject: discord.member, word_to_add):
 def remove_a_filter(session, ctx, subject: discord.member, word_to_remove):
     """Removes a text filter for a given subject. Returns False if no such filter is found."""
     register_subject(session, ctx, subject)
-    subject = session.query(Subject) \
-                     .filter(Subject.server_id == int(ctx.message.guild.id)) \
-                     .filter(Subject.discord_id == int(subject.id)) \
-                     .first()
-
     filter_records = session.query(TextFilter) \
-                            .filter(TextFilter.subject_id == subject.id) \
-                            .filter(TextFilter.word == word_to_remove) \
+                            .join(Subject) \
+                            .filter(TextFilter.word == word_to_remove,
+                                    Subject.server_id == int(ctx.message.guild.id),
+                                    Subject.discord_id == int(subject.id)) \
                             .all()
 
     if len(filter_records) > 0:
@@ -124,32 +138,26 @@ def remove_a_filter(session, ctx, subject: discord.member, word_to_remove):
 def clear_filters(session, ctx, subject: discord.member):
     """Clears all text filters for a given subject."""
     register_subject(session, ctx, subject)
-    subject = session.query(Subject) \
-                     .filter(Subject.server_id == int(ctx.message.guild.id)) \
-                     .filter(Subject.discord_id == int(subject.id)) \
-                     .first()
+    filter_records = session.query(TextFilter) \
+                            .join(Subject) \
+                            .filter(Subject.server_id == int(ctx.message.guild.id),
+                                    Subject.discord_id == int(subject.id)) \
+                            .all()
 
-    records = session.query(TextFilter) \
-                     .filter(TextFilter.subject_id == subject.id) \
-                     .all()
-
-    [session.delete(r) for r in records]
+    [session.delete(r) for r in filter_records]
     session.commit()
 
 
 def find_filters(session, ctx, subject: discord.member):
     """Returns all the text filters for a given subject"""
     register_subject(session, ctx, subject)
-    subject = session.query(Subject) \
-                     .filter(Subject.server_id == int(ctx.message.guild.id)) \
-                     .filter(Subject.discord_id == int(subject.id)) \
-                     .first()
+    filter_records = session.query(TextFilter) \
+                            .join(Subject) \
+                            .filter(Subject.server_id == int(ctx.message.guild.id),
+                                    Subject.discord_id == int(subject.id)) \
+                            .all()
 
-    result = session.query(TextFilter.word) \
-                    .filter(TextFilter.subject_id == subject.id) \
-                    .all()
-
-    return [res[0] for res in result]
+    return [res.word for res in filter_records]
 
 
 def make_tables():

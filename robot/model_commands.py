@@ -76,12 +76,9 @@ class ModelCommands(commands.Cog):
     async def generate(self, ctx, *, subject: discord.Member):
         """Generates a markov chain model and sample responses in the style of your subject"""
         if subject:
-            data_id = queries.get_latest_dataset(self.session, ctx, subject)
+            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
             filters = queries.find_filters(self.session, ctx, subject)
-            if not data_id:
-                await ctx.message.channel.send(
-                      f'I can\'t find a data set for {subject.name}. Try: `df!extract User#0000` first')
-            else:
+            if data_id:
                 await ctx.message.channel.send('Markovify request submitted!')
                 self.bot.loop.create_task(
                     self.markovify_request(ctx, self.bot, subject.name, data_id, filters, self.state_size, self.newline)
