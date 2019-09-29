@@ -4,14 +4,19 @@ from robot.schema import *
 from robot.config import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def check_connection(session):
+    """Should show a healthy connection when the bot starts"""
     result = session.query(Trainer).all()
-    print(f'Connected... # of registered users: {len(result)}')
+    logger.info(f'Connected... # of registered users: {len(result)}')
 
 
 def ping_connection(session):
+    """Uses this to make sure the connection is kept open"""
     session.query(Trainer).first()
 
 
@@ -57,7 +62,6 @@ def register_subject(session, ctx, subject: discord.member):
 
 def create_data_set(session, ctx, user_mention, uid):
     """Adds a record for when a data set is created"""
-
     subject_id = session.query(Subject) \
                         .filter(Subject.discord_id == int(user_mention.id),
                                 Subject.server_id == int(ctx.message.guild.id))\
@@ -161,6 +165,7 @@ def find_filters(session, ctx, subject: discord.member):
 
 
 def make_tables():
+    """Creates the tables in our database schema"""
     engine = create_engine(database_url)
     conn = engine.connect()
     Base.metadata.create_all(conn, checkfirst=False)
@@ -169,5 +174,6 @@ def make_tables():
 
 
 if __name__ == '__main__':
-    print(database_url)
+    """Only run this file if you want to create the schema"""
+    logger.info(database_url)
     make_tables()

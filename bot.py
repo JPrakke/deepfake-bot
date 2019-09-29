@@ -41,22 +41,14 @@ class DeepFakeBot(commands.Cog):
 
     @commands.command()
     async def repeat(self, ctx, msg):
-        """Prototype function for testing. Bot will repeat the message in the command."""
+        """Function for testing. Bot will repeat the message in the command."""
         logger.info(msg)
         channel = ctx.message.channel
         await channel.send(msg)
 
     @commands.command()
-    async def mention(self, ctx, member: discord.Member=None, n_times: int=1):
-        """Testing..."""
-        if member is not None:
-            for i in range(n_times):
-                await ctx.channel.send(member.name)
-
-    @commands.command()
     async def extract(self, ctx, *, subject: discord.Member = None):
         """Extracts chat history of a subject"""
-
         if subject:
             queries.register_subject(self.session, ctx, subject)
             await ctx.message.channel.send(

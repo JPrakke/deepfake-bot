@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 import sqlalchemy.ext
 from robot.config import *
 import robot.queries
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DeepFakeBotConnectionError(Exception):
@@ -19,7 +22,7 @@ class ConnectionManager(commands.Cog):
         self.create_connection()
 
     def create_connection(self):
-        print('Connecting to database...')
+        logger.info('Connecting to database...')
         self.engine = create_engine(database_url, pool_pre_ping=True)
         self.conn = self.engine.connect()
         self.session = Session(self.engine)
@@ -29,13 +32,13 @@ class ConnectionManager(commands.Cog):
         self.conn.close()
         self.session.close()
         self.engine.dispose()
-        print('Connection closed...')
+        logger.info('Connection closed...')
 
     def refresh_connection(self):
         try:
             robot.queries.ping_connection(self.session)
         except sqlalchemy.exc.OperationalError:
-            print('SQL issue. Re-establishing the connection...')
+            logger.warning('SQL issue. Re-establishing the connection...')
             try:
                 self.close_db_connection()
                 self.create_connection()

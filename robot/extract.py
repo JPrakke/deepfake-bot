@@ -5,6 +5,9 @@ import datetime as dt
 from robot import queries
 from robot.config import *
 import discord
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Need to make this a background task
@@ -18,7 +21,7 @@ async def extract_chat_history(ctx, user_mention, bot):
     channels = []
     timestamps = []
     message_counter = 0
-    print(f'Extracting chat history for {user_mention}...')
+    logger.info(f'Extracting chat history for {user_mention}...')
     start_time = dt.datetime.now()
     with gzip.open(text_file_name, 'wb') as f:
         for channel in ctx.message.guild.channels:
@@ -39,16 +42,16 @@ async def extract_chat_history(ctx, user_mention, bot):
             f.write(f'{timestamps[i]},{channels[i]}\n'.encode())
 
     end_time = dt.datetime.now()
-    print(f'{message_counter} messages extracted.')
-    print(f'Logs copied to tmp folder. Time elapsed = {end_time - start_time}')
+    logger.info(f'{message_counter} messages extracted.')
+    logger.info(f'Logs copied to tmp folder. Time elapsed = {end_time - start_time}')
 
     # S3
-    print('Uploading to S3...')
+    logger.info('Uploading to S3...')
     start_time = dt.datetime.now()
     upload_to_s3(text_file_name)
     upload_to_s3(channel_file_name)
     end_time = dt.datetime.now()
-    print(f'Files uploaded to S3: {extraction_id}. Time elapsed = {end_time - start_time}')
+    logger.info(f'Files uploaded to S3: {extraction_id}. Time elapsed = {end_time - start_time}')
 
     # Add to database
     session = bot.get_cog('ConnectionManager').session

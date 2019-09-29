@@ -3,6 +3,9 @@ from discord.ext import commands
 from robot import queries
 import boto3
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: update schema and store model records
@@ -29,11 +32,10 @@ class ModelCommands(commands.Cog):
             "filters": filters,
             "state_size": state_size,
             "new_line": new_line,
-            "number_responses": 25
+            "number_responses": 10
         }
 
         payload = json.dumps(request_data)
-        print(payload)
 
         response = client.invoke(
             FunctionName='deepfake-bot-markovify',
@@ -48,21 +50,23 @@ class ModelCommands(commands.Cog):
         try:
             status_code = res_json['statusCode']
         except KeyError:
-            print(res_json)
             status_code = 0
 
         if status_code == 200:
             sample_responses = res_json['body']
-            await ctx.message.channel.send(f'Replying in the style of {subject_string}:')
+            await ctx.message.channel.send(f'Request complete. Replying in the style of {subject_string}:')
             for i in range(len(sample_responses)):
-                res = f'`Message {i+1} of {len(sample_responses)}:`\n'
-                res = f'{res}{sample_responses[i]}\n'
+                res = f'**Message {i+1} of {len(sample_responses)}:**\n'
+                res += f'```{sample_responses[i]}```\n'
                 await ctx.message.channel.send(res)
         elif status_code == 0:
+            # TODO: Write and link to 'Tips for Generating a Good Model'
             await ctx.message.channel.send(
-                  'Sorry. I wasn\'t able to generate a valid Markov chain model. Try filtering your subject\'s data.'
+                  'Markov chain generation failed. Make sure you have enough data and that it is properly filtered.'
             )
         else:
+            logger.info('Markov generation failed...')
+            logger.info(res_json)
             await ctx.message.channel.send(
                   'Hmm... I seem to be having some issues processing your `markovify` request. Maybe try again.'
             )
@@ -79,7 +83,7 @@ class ModelCommands(commands.Cog):
             data_id = await queries.get_latest_dataset(self.session, ctx, subject)
             filters = queries.find_filters(self.session, ctx, subject)
             if data_id:
-                await ctx.message.channel.send('Markovify request submitted!')
+                await ctx.message.channel.send('Markovify request submitted...')
                 self.bot.loop.create_task(
                     self.markovify_request(ctx, self.bot, subject.name, data_id, filters, self.state_size, self.newline)
                 )
