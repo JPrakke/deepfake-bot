@@ -1,4 +1,5 @@
 import os
+import logging
 import discord
 from discord.ext import commands
 from robot import extract
@@ -8,6 +9,8 @@ from robot.db_connection import DeepFakeBotConnectionError
 from robot.filter_commands import FilterCommands
 from robot.plot_commands import PlotCommands
 from robot.model_commands import ModelCommands
+
+logger = logging.getLogger(__name__)
 
 
 class DeepFakeBot(commands.Cog):
@@ -31,15 +34,15 @@ class DeepFakeBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Logged in as')
-        print(self.bot.user.name)
-        print(self.bot.user.id)
-        print('------')
+        logger.info('Logged in as')
+        logger.info(self.bot.user.name)
+        logger.info(self.bot.user.id)
+        logger.info('------')
 
     @commands.command()
     async def repeat(self, ctx, msg):
         """Prototype function for testing. Bot will repeat the message in the command."""
-        print(msg)
+        logger.info(msg)
         channel = ctx.message.channel
         await channel.send(msg)
 
@@ -84,9 +87,10 @@ def run_app():
     try:
         app.run(token)
     except RuntimeError as e:
-        print('DeepfakeBot: Failed start attempt. I may have already been running.')
-        print(e)
+        logger.error('DeepfakeBot: Failed start attempt. I may have already been running.')
+        logger.error(e)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     run_app()
