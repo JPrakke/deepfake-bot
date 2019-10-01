@@ -62,7 +62,8 @@ class DeployCommands(commands.Cog):
                                 'new_conversation_max_wait': 3600,
                                 'max_sentence_length': 250,
                                 'quiet_mode': False,
-                                'white_list_server_ids': [ctx.message.guild.id]
+                                'white_list_server_ids': [ctx.message.guild.id],
+                                'favorite_words': ['']
                                 }
             config_file_name = f'{model_uid}-config.json'
             with open(f'./tmp/{config_file_name}', 'w') as f:
