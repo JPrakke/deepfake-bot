@@ -9,6 +9,7 @@ from robot.db_connection import DeepFakeBotConnectionError
 from robot.filter_commands import FilterCommands
 from robot.plot_commands import PlotCommands
 from robot.model_commands import ModelCommands
+from robot.deploy_commands import DeployCommands
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,7 @@ app.add_cog(DeepFakeBot(app))
 app.add_cog(FilterCommands(app))
 app.add_cog(PlotCommands(app))
 app.add_cog(ModelCommands(app))
+app.add_cog(DeployCommands(app))
 
 
 @app.event

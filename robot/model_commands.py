@@ -8,7 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# TODO: update schema and store model records
 class ModelCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -54,11 +53,20 @@ class ModelCommands(commands.Cog):
 
         if status_code == 200:
             sample_responses = res_json['body']
-            await ctx.message.channel.send(f'Request complete. Replying in the style of {subject_string}:')
+            model_uid = res_json['model_uid']
+
+            await ctx.message.channel.send(
+                f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject_string}:'
+            )
+
             for i in range(len(sample_responses)):
                 res = f'**Message {i+1} of {len(sample_responses)}:**\n'
                 res += f'```{sample_responses[i]}```\n'
                 await ctx.message.channel.send(res)
+
+            # Lambda function has already added the files to S3. Here we just add a record to the database.
+            queries.create_markov_model(self.session, data_uid, model_uid)
+
         elif status_code == 0:
             # TODO: Write and link to 'Tips for Generating a Good Model'
             await ctx.message.channel.send(

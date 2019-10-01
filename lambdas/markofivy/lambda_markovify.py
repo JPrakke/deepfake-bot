@@ -3,9 +3,9 @@ import boto3
 import json
 import os
 import gzip
+import uuid
 
 
-# TODO: upload model artifacts to S3
 def lambda_handler(event, context):
     # Read in arguments / event data
     data_uid = event['data_uid']
@@ -16,7 +16,7 @@ def lambda_handler(event, context):
 
     # Download the data set from S3
     text_file_name = f'{data_uid}-text.dsv.gz'
-    aws_s3_bucket_prefix = os.environ['DEEPFAKE_S3_BUCKET_PREFIX']
+    aws_s3_bucket_prefix = 'deepfake-discord-bot'
     s3 = boto3.resource('s3')
     s3.Bucket(aws_s3_bucket_prefix) \
         .download_file(text_file_name, '/tmp/' + text_file_name)
@@ -54,7 +54,18 @@ def lambda_handler(event, context):
     for i in range(number_responses):
         responses.append(text_model.make_sentence(tries=100))
 
+    # Write results to compressed file
+    model_uid = str(uuid.uuid4().hex)
+    model_file_name = f'{model_uid}-markov-model.json.gz'
+    with gzip.open(f'/tmp/{model_file_name}', 'wb') as f:
+        f.write(text_model.to_json().encode())
+
+    # Upload to S3
+    s3.Object(aws_s3_bucket_prefix, model_file_name) \
+        .upload_file(f'/tmp/{model_file_name}')
+
     return {
         'statusCode': 200,
-        'body': responses
+        'body': responses,
+        'model_uid': model_uid
     }

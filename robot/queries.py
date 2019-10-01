@@ -164,6 +164,83 @@ def find_filters(session, ctx, subject: discord.member):
     return [res.word for res in filter_records]
 
 
+def create_markov_model(session, data_set_uid, model_uid):
+    """Adds a record for when a Markov model is generated"""
+    data_set_id = session.query(DataSet) \
+                         .filter(DataSet.data_uid == data_set_uid)\
+                         .first().id
+
+    new_markov_model = MarkovModel(
+        data_set_id=data_set_id,
+        time_collected=dt.datetime.utcnow(),
+        model_uid=model_uid
+    )
+    session.add(new_markov_model)
+    session.commit()
+
+
+async def get_latest_markov_model(session, ctx, user_mention):
+    """Works similar to get_latest_dataset(). Returns False if no data found"""
+    result = session.query(MarkovModel) \
+                    .join(DataSet) \
+                    .join(Subject) \
+                    .filter(Subject.discord_id == int(user_mention.id),
+                            Subject.server_id == int(ctx.message.guild.id))\
+                    .order_by(MarkovModel.id.desc()).first()
+
+    try:
+        markov_model = result
+        if (dt.datetime.utcnow() - markov_model.time_collected).days < 1:
+            return markov_model.model_uid
+        else:
+            await ctx.message.channel.send(
+                  f'The only model I found on this server for {user_mention.name} is expired.')
+            await ctx.message.channel.send(f'Try running `df!markovify generate` again.')
+            # TODO: Add a link to data retention policy once it's done
+            return False
+    except (TypeError, AttributeError):
+        await ctx.message.channel.send(
+              f'I couldn\'t find a model for {user_mention.name}. Try running `df!markovify generate` first.')
+        return False
+
+
+def create_deployment(session, ctx, model_uid, secret_key, bot_token=''):
+    """Records a new deployment. If no bot token is provided, assume it's a self deployment."""
+    markov_id = session.query(MarkovModel) \
+        .filter(MarkovModel.model_uid == model_uid) \
+        .first().id
+
+    trainer_id = session.query(Trainer)\
+                        .filter(Trainer.discord_id == ctx.message.author.id)\
+                        .first().id
+
+    new_deployment = Deployment(
+        secret_key=secret_key,
+        markov_id=markov_id,
+        trainer_id=trainer_id,
+        hosted=bot_token is not ''
+    )
+    session.add(new_deployment)
+    session.flush()
+
+    if bot_token:
+        # Create a new record with default settings
+        new_hosted_deployment = HostedDeployment(
+            deployment_id=new_deployment.id,
+            ip_address='0.0.0.0',
+            active=True,
+            reply_probability=0.3,
+            new_conversation_min_wait=60,
+            new_conversation_max_wait=3600,
+            max_sentence_length=250,
+            quiet_mode=False,
+            bot_token=bot_token
+        )
+        session.add(new_hosted_deployment)
+
+    session.commit()
+
+
 def make_tables():
     """Creates the tables in our database schema"""
     engine = create_engine(database_url)
