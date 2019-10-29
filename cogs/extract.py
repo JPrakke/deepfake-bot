@@ -29,7 +29,7 @@ async def extract_chat_history(ctx, user_mention, bot):
                 async for message in channel.history(limit=10**7):
                     if message.author == user_mention:
                         message_counter += 1
-                        result = str(message.clean_content + unique_delimiter)
+                        result = str(message.content + unique_delimiter)
                         timestamps.append(int(message.created_at.timestamp()))
                         channels.append(channel.name)
                         f.write(result.encode())
