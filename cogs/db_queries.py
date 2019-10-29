@@ -1,7 +1,7 @@
 import datetime as dt
 import discord
-from robot.schema import *
-from robot.config import *
+from cogs.db_schema import *
+from cogs.config import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 import logging

@@ -3,7 +3,7 @@ import s3fs
 import gzip
 from wordcloud import WordCloud, STOPWORDS
 import multidict as multidict
-import robot.config
+import cogs.config
 
 
 def get_frequency_dict(sentence):
@@ -42,11 +42,11 @@ def apply_filters(content, filters):
 
 def get_s3_content(data_id):
     """Reads in data from S3 file"""
-    s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
-                           secret=robot.config.aws_secret_access_key)
-    with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
+                           secret=cogs.config.aws_secret_access_key)
+    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
         g = gzip.GzipFile(fileobj=f)
-        content = g.read().decode().split(robot.config.unique_delimiter)
+        content = g.read().decode().split(cogs.config.unique_delimiter)
 
     return content
 
@@ -55,7 +55,7 @@ def generate_dirty(data_id):
     """Makes a word cloud of swear words for a subject. No filters applied."""
     content = ' '.join(get_s3_content(data_id))
 
-    swear_path = './robot/resources/swearWords.txt'
+    swear_path = './cogs/resources/swearWords.txt'
     with open(swear_path, 'r') as f:
         swear_words = [i.strip() for i in f]
 

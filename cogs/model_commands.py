@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from robot import queries
+from cogs import db_queries
 import boto3
 import json
 import logging
@@ -65,7 +65,7 @@ class ModelCommands(commands.Cog):
                 await ctx.message.channel.send(res)
 
             # Lambda function has already added the files to S3. Here we just add a record to the database.
-            queries.create_markov_model(self.session, data_uid, model_uid)
+            db_queries.create_markov_model(self.session, data_uid, model_uid)
 
         elif status_code == 0:
             # TODO: Write and link to 'Tips for Generating a Good Model'
@@ -88,8 +88,8 @@ class ModelCommands(commands.Cog):
     async def generate(self, ctx, *, subject: discord.Member):
         """Generates a markov chain model and sample responses in the style of your subject"""
         if subject:
-            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
-            filters = queries.find_filters(self.session, ctx, subject)
+            data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
+            filters = db_queries.find_filters(self.session, ctx, subject)
             if data_id:
                 await ctx.message.channel.send('Markovify request submitted...')
                 self.bot.loop.create_task(

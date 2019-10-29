@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from robot import queries
-import robot.config
+from cogs import db_queries
+import cogs.config
 import s3fs
 from cryptography.fernet import Fernet
 import os
@@ -16,8 +16,8 @@ class DeployCommands(commands.Cog):
         self.bot = bot
         self.parent_cog = self.bot.get_cog('DeepFakeBot')
         self.session = self.parent_cog.session
-        self.s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
-                       secret=robot.config.aws_secret_access_key)
+        self.s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
+                                    secret=cogs.config.aws_secret_access_key)
 
     async def cog_check(self, ctx):
         connection_ok = await self.parent_cog.cog_check(ctx)
@@ -28,7 +28,7 @@ class DeployCommands(commands.Cog):
         # Read from S3
         model_file_name = f'{model_uid}-markov-model.json.gz'
         encrypted_file_name = model_file_name.replace('markov-model', 'markov-model-encrypted')
-        with self.s3.open(f'{robot.config.aws_s3_bucket_prefix}/{model_file_name}', mode='rb') as f:
+        with self.s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{model_file_name}', mode='rb') as f:
             content = f.read()
 
         # Generate encryption key
@@ -49,12 +49,12 @@ class DeployCommands(commands.Cog):
 
     @deploy.command()
     async def self(self, ctx, *, subject: discord.Member):
-        model_uid = await queries.get_latest_markov_model(self.session, ctx, subject)
+        model_uid = await db_queries.get_latest_markov_model(self.session, ctx, subject)
         if model_uid:
 
             # Create and record an encrypted model
             key, encrypted_file_name = self.download_and_encrypt(model_uid)
-            queries.create_deployment(self.session, ctx, model_uid, key.decode())
+            db_queries.create_deployment(self.session, ctx, model_uid, key.decode())
 
             # Create a config file with default settings
             default_settings = {'reply_probability': 0.3,

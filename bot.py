@@ -2,14 +2,14 @@ import os
 import logging
 import discord
 from discord.ext import commands
-from robot import extract
-from robot import queries
-from robot.db_connection import ConnectionManager
-from robot.db_connection import DeepFakeBotConnectionError
-from robot.filter_commands import FilterCommands
-from robot.plot_commands import PlotCommands
-from robot.model_commands import ModelCommands
-from robot.deploy_commands import DeployCommands
+from cogs import extract
+from cogs import db_queries
+from cogs.db_connection import ConnectionManager
+from cogs.db_connection import DeepFakeBotConnectionError
+from cogs.filter_commands import FilterCommands
+from cogs.plot_commands import PlotCommands
+from cogs.model_commands import ModelCommands
+from cogs.deploy_commands import DeployCommands
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class DeepFakeBot(commands.Cog):
             return False
 
         self.session = connection_manager.session
-        queries.register_trainer(self.session, ctx)
+        db_queries.register_trainer(self.session, ctx)
         return True
 
     @commands.Cog.listener()
@@ -51,7 +51,7 @@ class DeepFakeBot(commands.Cog):
     async def extract(self, ctx, *, subject: discord.Member = None):
         """Extracts chat history of a subject"""
         if subject:
-            queries.register_subject(self.session, ctx, subject)
+            db_queries.register_subject(self.session, ctx, subject)
             await ctx.message.channel.send(
                   f'Extracting chat history for {subject.name}... (This could take a few minutes).'
             )

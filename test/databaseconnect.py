@@ -1,6 +1,6 @@
 import unittest
-import robot.config
-from robot.schema import *
+import cogs.config
+from cogs.db_schema import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 class DatabaseTests(unittest.TestCase):
     def test_user_count(self):
         print('Connecting to database...')
-        engine = create_engine(robot.config.database_url)
+        engine = create_engine(cogs.config.database_url)
         conn = engine.connect()
         session = Session(engine)
 

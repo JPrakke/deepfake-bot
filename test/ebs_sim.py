@@ -6,7 +6,7 @@ import bot
 
 
 def spawn_robot(test_id):
-    print("Starting robot for test...")
+    print("Starting cogs for test...")
     bot.application()
     print(f"Robot started. Test ID: {test_id}")
 

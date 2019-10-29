@@ -4,7 +4,7 @@ import s3fs
 import datetime as dt
 import numpy as np
 import matplotlib.dates as mdates
-import robot.config
+import cogs.config
 from pandas.plotting import register_matplotlib_converters
 from matplotlib import cm
 
@@ -55,9 +55,9 @@ def time_series_chart(data_id, user_name):
     """Plots a user's activity over time. I.e. number of messages vs. date"""
 
     # Open our file from S3 and read in the data
-    s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
-                           secret=robot.config.aws_secret_access_key)
-    with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
+                           secret=cogs.config.aws_secret_access_key)
+    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     # Some data transformations
@@ -98,9 +98,9 @@ def pie_charts(data_id, user_name):
     """Plots a user's most active channels and days of the week"""
 
     # Open our file from S3 and read in the data
-    s3 = s3fs.S3FileSystem(key=robot.config.aws_access_key_id,
-                           secret=robot.config.aws_secret_access_key)
-    with s3.open(f'{robot.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
+                           secret=cogs.config.aws_secret_access_key)
+    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     # Some data transformations

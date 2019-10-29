@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from robot import queries
+from cogs import db_queries
 
 
 class FilterCommands(commands.Cog):
@@ -23,14 +23,14 @@ class FilterCommands(commands.Cog):
     @filter.command()
     async def add(self, ctx, subject: discord.Member, word_to_add):
         if len(word_to_add) < 256:
-            queries.add_a_filter(self.session, ctx, subject, word_to_add)
+            db_queries.add_a_filter(self.session, ctx, subject, word_to_add)
             await ctx.send(f'Added text filter `{word_to_add}` to `{subject.name}` for this server.')
         else:
             await ctx.send('Filters need to be 255 characters or less.')
 
     @filter.command()
     async def remove(self, ctx, subject: discord.Member, word_to_drop):
-        found_word = queries.remove_a_filter(self.session, ctx, subject, word_to_drop)
+        found_word = db_queries.remove_a_filter(self.session, ctx, subject, word_to_drop)
         if found_word:
             await ctx.send(f'Removed text filter `{word_to_drop}` to `{subject.name}` for this server.')
         else:
@@ -38,7 +38,7 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     async def show(self, ctx, subject: discord.Member):
-        found_filters = queries.find_filters(self.session, ctx, subject)
+        found_filters = db_queries.find_filters(self.session, ctx, subject)
         if len(found_filters) > 0:
             n = '\n'
             await ctx.send(f'Filters applied to {subject.name} for this server:\n```{n}{n.join(found_filters)}{n}```')
@@ -47,5 +47,5 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     async def clear_all(self, ctx, subject: discord.Member):
-        queries.clear_filters(self.session, ctx, subject)
+        db_queries.clear_filters(self.session, ctx, subject)
         await ctx.send(f'Text filters removed for `{subject.name}` on this server.')

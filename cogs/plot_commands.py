@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
-from robot import queries
-from robot import plot_wordcloud
-from robot import plot_activity
+from cogs import db_queries
+from cogs import plot_wordcloud
+from cogs import plot_activity
 import s3fs
 import gzip
-from robot.config import *
+from cogs.config import *
 
 
 class PlotCommands(commands.Cog):
@@ -23,9 +23,9 @@ class PlotCommands(commands.Cog):
     async def wordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image if a data set exists for the mentioned subject"""
         if subject:
-            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
             if data_id:
-                filters = queries.find_filters(self.session, ctx, subject)
+                filters = db_queries.find_filters(self.session, ctx, subject)
                 file_name, n_messages, n_filtered = plot_wordcloud.generate(data_id, filters)
                 await ctx.message.channel.send(f'Here are {subject.name}\'s favorite words:',
                                                file=discord.File(file_name, file_name))
@@ -38,7 +38,7 @@ class PlotCommands(commands.Cog):
     async def activity(self, ctx, *, subject: discord.Member):
         """Uploads time series and pie charts image if a data set exists for the mentioned subject"""
         if subject:
-            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
             if data_id:
                 # Make the time series chart
                 file_name = plot_activity.time_series_chart(data_id, subject.name)
@@ -61,7 +61,7 @@ class PlotCommands(commands.Cog):
     async def dirtywordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image of curse words if a dataset has been extracted for the mentioned subject"""
         if subject:
-            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
             if data_id:
                 file_name = plot_wordcloud.generate_dirty(data_id)
                 if file_name:
@@ -78,7 +78,7 @@ class PlotCommands(commands.Cog):
     async def countword(self, ctx, subject: discord.Member = None, word: str = None):
         """Counts the number of times a subject has used a word."""
         if subject and word:
-            data_id = await queries.get_latest_dataset(self.session, ctx, subject)
+            data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
             if data_id:
                 # Read the file from S3
                 s3 = s3fs.S3FileSystem(key=aws_access_key_id,
