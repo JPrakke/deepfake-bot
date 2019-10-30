@@ -56,6 +56,7 @@ class DeployCommands(commands.Cog):
             key, encrypted_file_name = self.download_and_encrypt(model_uid)
             db_queries.create_deployment(self.session, ctx, model_uid, key.decode())
 
+            #TODO: update this
             # Create a config file with default settings
             default_settings = {'reply_probability': 0.3,
                                 'new_conversation_min_wait': 60,

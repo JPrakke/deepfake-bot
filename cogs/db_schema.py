@@ -45,6 +45,16 @@ class TextFilter(Base):
     word = Column(String(255))
 
 
+class MarkovSettings(Base):
+    """State size and newline options that will get applied to subject's model"""
+    __tablename__ = 'markov_settings'
+    id = Column(BigInteger, primary_key=True)
+    subject_id = Column(BigInteger, ForeignKey('subjects.id'))
+    subject_foreign_key = relationship('Subject', foreign_keys=[subject_id])
+    state_size = Column(Integer)
+    newline = Column(Boolean)
+
+
 class MarkovModel(Base):
     """Markov chain models generated from our subject's chat history"""
     __tablename__ = 'markov_models'
@@ -75,6 +85,7 @@ class Deployment(Base):
     hosted = Column(Boolean)
 
 
+#TODO: finalize these settings
 class HostedDeployment(Base):
     """A trained bot running on an EC2 instance"""
     __tablename__ = 'hosted_deployments'

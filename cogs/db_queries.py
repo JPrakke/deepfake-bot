@@ -164,6 +164,53 @@ def find_filters(session, ctx, subject: discord.member):
     return [res.word for res in filter_records]
 
 
+def get_markov_settings(session, ctx, subject: discord.member):
+    """Returns the current markov settings for a given subject (or defaults if no record exists)"""
+    register_subject(session, ctx, subject)
+    markov_records = session.query(MarkovSettings) \
+                            .join(Subject) \
+                            .filter(Subject.server_id == int(ctx.message.guild.id),
+                                    Subject.discord_id == int(subject.id)) \
+                            .all()
+
+    if len(markov_records) == 1:
+        return markov_records[0].state_size, markov_records[0].newline
+    else:
+        return 3, False
+
+
+def update_markov_settings(session, ctx, subject: discord.member, new_state_size, new_newline):
+    """Updates the markov settings for a user or creates a new record if none exists"""
+    register_subject(session, ctx, subject)
+    markov_records = session.query(MarkovSettings) \
+                            .join(Subject) \
+                            .filter(Subject.server_id == int(ctx.message.guild.id),
+                                    Subject.discord_id == int(subject.id)) \
+                            .all()
+
+    if len(markov_records) == 1:
+        # If a record is found, just update it
+        markov_records[0].state_size = new_state_size
+        markov_records[0].newline = new_newline
+        session.commit()
+    else:
+        # It's unlikely that there will be more than one record but still, let's make sure...
+        for record in markov_records:
+            session.delete(record)
+
+        # Add the new settings
+        new_record = MarkovSettings(
+            subject_id=session.query(Subject)
+                              .filter(Subject.server_id == int(ctx.message.guild.id),
+                                      Subject.discord_id == int(subject.id))
+                              .first().id,
+            state_size=new_state_size,
+            newline=new_newline
+        )
+        session.add(new_record)
+        session.commit()
+
+
 def create_markov_model(session, data_set_uid, model_uid):
     """Adds a record for when a Markov model is generated"""
     data_set_id = session.query(DataSet) \
