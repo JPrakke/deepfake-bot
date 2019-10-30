@@ -49,4 +49,7 @@ echo "Committing..."
 git add release.sh
 git commit -m "RELEASE SCRIPT: preparing for next release"
 
+echo "Pushing..."
+git push --follow-tags
+
 echo "Release complete!"
