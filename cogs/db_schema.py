@@ -18,7 +18,7 @@ class Subject(Base):
     """Training subjects, i.e. discord users on a particular server who we will convert into models"""
     __tablename__ = 'subjects'
     id = Column(BigInteger, primary_key=True)
-    discord_id = Column(BigInteger, unique=True)
+    discord_id = Column(BigInteger)
     subject_name = Column(String(255))
     server_id = Column(BigInteger)
     server_name = Column(String(255))
