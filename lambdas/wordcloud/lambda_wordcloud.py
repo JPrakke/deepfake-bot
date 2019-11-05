@@ -1,9 +1,59 @@
 import matplotlib.pyplot as plt
-import s3fs
-import gzip
 from wordcloud import WordCloud, STOPWORDS
 import multidict as multidict
-import cogs.config
+import boto3
+import gzip
+
+
+def lambda_handler(event, context):
+
+    # Read in arguments / event data
+    data_uid = event['data_uid']
+    filters = event['filters']
+    dirty = event['dirty']
+
+    # Download the data set from S3
+    text_file_name = f'{data_uid}-text.dsv.gz'
+    aws_s3_bucket_prefix = 'deepfake-discord-bot'
+    s3 = boto3.resource('s3')
+    s3.Bucket(aws_s3_bucket_prefix) \
+        .download_file(text_file_name, '/tmp/' + text_file_name)
+
+    # Decompress
+    with open('/tmp/' + text_file_name, 'rb') as f:
+        g = gzip.GzipFile(fileobj=f)
+        content = g.read().decode(). \
+            split('11a4b96a-ae8a-45f9-a4db-487cda63f5bd')
+
+    # Apply filters
+    if filters == ['']:
+        filtered_content = content
+    else:
+        filtered_content = []
+        for i in content:
+            include = True
+            for j in filters:
+                if j in i:
+                    include = False
+                    break
+            if include:
+                filtered_content.append(i)
+
+    if dirty:
+        image_file_name = generate_dirty(filtered_content, data_uid)
+    else:
+        image_file_name = generate(filtered_content, data_uid)
+
+    # Upload to S3
+    s3.Object(aws_s3_bucket_prefix, image_file_name) \
+        .upload_file(f'/tmp/{image_file_name}')
+
+    return {
+        'statusCode': 200,
+        'image_file_name': image_file_name,
+        'total_messages': len(content),
+        'filtered_messages': len(filtered_content)
+    }
 
 
 def get_frequency_dict(sentence):
@@ -22,38 +72,8 @@ def get_frequency_dict(sentence):
     return full_terms_dict
 
 
-def apply_filters(content, filters):
-    """Filters messages based on a list of words. If a filter word is present in a message, that message is removed."""
-    if filters == ['']:
-        return content
-
-    filtered_content = []
-    for mssg in content:
-        include = True
-        for filter_words in filters:
-            if filter_words in mssg:
-                include = False
-                break
-        if include:
-            filtered_content.append(mssg)
-
-    return filtered_content
-
-
-def get_s3_content(data_id):
-    """Reads in data from S3 file"""
-    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
-                           secret=cogs.config.aws_secret_access_key)
-    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-text.dsv.gz', mode='rb') as f:
-        g = gzip.GzipFile(fileobj=f)
-        content = g.read().decode().split(cogs.config.unique_delimiter)
-
-    return content
-
-
-def generate_dirty(data_id):
+def generate_dirty(content, data_id):
     """Makes a word cloud of swear words for a subject. No filters applied."""
-    content = ' '.join(get_s3_content(data_id))
 
     swear_path = './cogs/resources/swearWords.txt'
     with open(swear_path, 'r') as f:
@@ -78,16 +98,13 @@ def generate_dirty(data_id):
     fig.add_axes(ax)
     ax.imshow(wc, interpolation='bilinear')
 
-    file_name = f'./tmp/{data_id}-dirty-word-cloud.png'
-    fig.savefig(file_name)
+    file_name = f'{data_id}-dirty-word-cloud.png'
+    fig.savefig(f'/tmp/{file_name}')
     return file_name
 
 
-def generate(data_id, filters):
+def generate(selected_content, data_id):
     """Makes a wordcloud of a user's messages with filters applied"""
-    content = get_s3_content(data_id)
-    selected_content = apply_filters(content, filters)
-
     wc = WordCloud(background_color="black",
                    stopwords=STOPWORDS,
                    colormap='BrBG',
@@ -101,7 +118,6 @@ def generate(data_id, filters):
     fig.add_axes(ax)
     ax.imshow(wc, interpolation='bilinear')
 
-    file_name = f'./tmp/{data_id}-word-cloud.png'
-
-    fig.savefig(file_name)
-    return file_name, len(content), len(selected_content)
+    file_name = f'{data_id}-word-cloud.png'
+    fig.savefig(f'/tmp/{file_name}')
+    return file_name

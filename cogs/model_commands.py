@@ -37,7 +37,7 @@ class ModelCommands(commands.Cog):
 
         try:
             response = self.boto_client.invoke(
-                FunctionName='deepfake-bot-markovify',
+                FunctionName=config.lambda_markov_name,
                 InvocationType='RequestResponse',
                 LogType='Tail',
                 Payload=payload,
