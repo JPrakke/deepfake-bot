@@ -6,35 +6,57 @@ from cogs import db_queries
 from cogs.config import *
 import discord
 import logging
+import re
+from discord.utils import get
 
 logger = logging.getLogger(__name__)
+discord_id_re = re.compile('<@.?[0-9]*?>')
 
 
-# Need to make this a background task
+def mentions_to_names(s, bot):
+    """Converts the text of a mention to the format @<User#0000>"""
+    matches = discord_id_re.findall(s)
+    for mention in matches:
+        discord_id = mention.replace('<@', '') \
+            .replace('>', '') \
+            .replace('i', '') \
+            .replace('!', '')
+
+        user = get(bot.get_all_members(), id=int(discord_id))
+        if user:
+            s = s.replace(mention, f'@{user.name}#{user.discriminator}')
+        else:
+            s = s.replace(mention, '@UNKNOWN_USER')
+
+    return s
+
+
 async def extract_chat_history(ctx, user_mention, bot):
+    """Background task for reading chat history and uploading to S3"""
     await bot.wait_until_ready()
 
     extraction_id = str(uuid.uuid4().hex)
     text_file_name = f'./tmp/{extraction_id}-text.dsv.gz'
-    channel_file_name = f'./tmp/{extraction_id}-channels.tsv.gz'
+    channel_file_name = f'./tmp/{extraction_id}-channels.csv.gz'
 
-    channels = []
-    timestamps = []
-    message_counter = 0
+    channels, timestamps, message_counter = [], [], 0
     logger.info(f'Extracting chat history for {user_mention}...')
     start_time = dt.datetime.now()
     with gzip.open(text_file_name, 'wb') as f:
         for channel in ctx.message.guild.channels:
             try:
                 async for message in channel.history(limit=10**7):
-                    if message.author == user_mention:
-                        message_counter += 1
-                        result = str(message.content + unique_delimiter)
-                        timestamps.append(int(message.created_at.timestamp()))
-                        channels.append(channel.name)
-                        f.write(result.encode())
-            except Exception:
-                continue
+                    try:
+                        if message.author == user_mention:
+                            message_counter += 1
+                            result = str(mentions_to_names(message.content, bot) + unique_delimiter)
+                            timestamps.append(int(message.created_at.timestamp()))
+                            channels.append(channel.name)
+                            f.write(result.encode())
+                    except Exception as e:
+                        logger.error(str(e))
+            except Exception as e:
+                logger.error(str(e))
 
     with gzip.open(channel_file_name, 'wb') as f:
         f.write('timestamp,channel\n'.encode())

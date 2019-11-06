@@ -57,7 +57,7 @@ def time_series_chart(data_id, user_name):
     # Open our file from S3 and read in the data
     s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
                            secret=cogs.config.aws_secret_access_key)
-    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.csv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     # Some data transformations
@@ -100,7 +100,7 @@ def pie_charts(data_id, user_name):
     # Open our file from S3 and read in the data
     s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
                            secret=cogs.config.aws_secret_access_key)
-    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.tsv.gz', mode='rb') as f:
+    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.csv.gz', mode='rb') as f:
         df = pd.read_csv(f, compression='gzip', encoding='utf-8')
 
     # Some data transformations
