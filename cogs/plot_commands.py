@@ -105,7 +105,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Activity plot request submitted...')
                 request_data = {
                     "data_uid": data_id,
-                    "user_name": subject.nick
+                    "user_name": subject.name
                 }
                 await self.process_image_request(ctx, subject, request_data, config.lambda_activity_name,
                                                  'activity plot', '')
