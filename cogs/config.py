@@ -8,6 +8,7 @@ aws_secret_access_key = os.environ['DEEPFAKE_SECRET_ACCESS_KEY']
 aws_s3_bucket_prefix = 'deepfake-discord-bot'
 lambda_markov_name = 'deepfake-bot-markovify'
 lambda_wordcloud_name = 'deepfake-bot-wordcloud'
+lambda_activity_name = 'deepfake-bot-activity'
 
 # Amazon RDS
 database_url = os.environ['DEEPFAKE_DATABASE_STRING']

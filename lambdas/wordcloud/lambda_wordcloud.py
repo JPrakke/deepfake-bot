@@ -50,7 +50,7 @@ def lambda_handler(event, context):
 
     return {
         'statusCode': 200,
-        'image_file_name': image_file_name,
+        'image_file_names': [image_file_name],
         'total_messages': len(content),
         'filtered_messages': len(filtered_content)
     }
@@ -74,8 +74,9 @@ def get_frequency_dict(sentence):
 
 def generate_dirty(content, data_id):
     """Makes a word cloud of swear words for a subject. No filters applied."""
+    content = ' '.join(content)
 
-    swear_path = './cogs/resources/swearWords.txt'
+    swear_path = './resources/swearWords.txt'
     with open(swear_path, 'r') as f:
         swear_words = [i.strip() for i in f]
 

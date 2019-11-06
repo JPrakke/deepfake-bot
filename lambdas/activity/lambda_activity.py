@@ -1,14 +1,40 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import s3fs
 import datetime as dt
 import numpy as np
+import boto3
 import matplotlib.dates as mdates
-import cogs.config
 from pandas.plotting import register_matplotlib_converters
 from matplotlib import cm
 
 register_matplotlib_converters()
+
+
+def lambda_handler(event, context):
+
+    # Read in arguments / event data
+    data_uid = event['data_uid']
+    user_name = event['user_name']
+
+    # Download the data set from S3
+    data_file_name = f'{data_uid}-channels.csv.gz'
+    aws_s3_bucket_prefix = 'deepfake-discord-bot'
+    s3 = boto3.resource('s3')
+    s3.Bucket(aws_s3_bucket_prefix) \
+        .download_file(data_file_name, '/tmp/' + data_file_name)
+
+    # Make the plots
+    activity_file = time_series_chart(data_uid, user_name)
+    channels_file = channels_chart(data_uid, user_name)
+
+    # Upload to S3
+    s3.Object(aws_s3_bucket_prefix, activity_file).upload_file(f'/tmp/{activity_file}')
+    s3.Object(aws_s3_bucket_prefix, channels_file).upload_file(f'/tmp/{channels_file}')
+
+    return {
+        'statusCode': 200,
+        'image_file_names': [activity_file, channels_file]
+    }
 
 
 def day_filler(dates, counts):
@@ -54,11 +80,9 @@ def auto_time_scale(td):
 def time_series_chart(data_id, user_name):
     """Plots a user's activity over time. I.e. number of messages vs. date"""
 
-    # Open our file from S3 and read in the data
-    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
-                           secret=cogs.config.aws_secret_access_key)
-    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.csv.gz', mode='rb') as f:
-        df = pd.read_csv(f, compression='gzip', encoding='utf-8')
+    # Open our file from S3 and read in the
+    data_file_name = f'/tmp/{data_id}-channels.csv.gz'
+    df = pd.read_csv(data_file_name, compression='gzip', encoding='utf-8')
 
     # Some data transformations
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
@@ -89,19 +113,17 @@ def time_series_chart(data_id, user_name):
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    file_name = f'./tmp/{data_id}-activity.png'
-    fig.savefig(file_name)
+    file_name = f'{data_id}-activity.png'
+    fig.savefig(f'/tmp/{file_name}')
     return file_name
 
 
-def pie_charts(data_id, user_name):
-    """Plots a user's most active channels and days of the week"""
+def channels_chart(data_id, user_name):
+    """Plots a user's most active channels"""
 
-    # Open our file from S3 and read in the data
-    s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
-                           secret=cogs.config.aws_secret_access_key)
-    with s3.open(f'{cogs.config.aws_s3_bucket_prefix}/{data_id}-channels.csv.gz', mode='rb') as f:
-        df = pd.read_csv(f, compression='gzip', encoding='utf-8')
+    # Open our file from S3 and read in the
+    data_file_name = f'/tmp/{data_id}-channels.csv.gz'
+    df = pd.read_csv(data_file_name, compression='gzip', encoding='utf-8')
 
     # Some data transformations
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
@@ -109,13 +131,9 @@ def pie_charts(data_id, user_name):
     df['date'] = df['datetime'].apply(lambda t: t.date())
 
     ch_gb = df.groupby('channel')
-    day_gb = df.groupby('day')
 
     pie_labels = ch_gb['timestamp'].count().index.values
     pie_values = ch_gb['timestamp'].count().values
-
-    day_labels = day_gb['timestamp'].count().index.values
-    day_values = day_gb['timestamp'].count().values
 
     # Make the channels pie chart
     fig, ax = plt.subplots()
@@ -123,16 +141,7 @@ def pie_charts(data_id, user_name):
     ax.pie(pie_values, labels=pie_labels, autopct='%1.1f%%', explode=[0.05]*pie_labels.size, colors=color_scale)
     ax.set_title(f'{user_name}\'s Favorite Channels')
 
-    file_name_channels = f'./tmp/{data_id}-pie-chart-channels.png'
-    fig.savefig(file_name_channels)
+    file_name_channels = f'{data_id}-pie-chart-channels.png'
+    fig.savefig(f'/tmp/{file_name_channels}')
 
-    # Make the days of the week pie chart
-    fig, ax = plt.subplots()
-    color_scale = cm.Blues(np.flip(np.arange(day_labels.size)) / day_labels.size)
-    ax.pie(day_values, labels=day_labels, autopct='%1.1f%%', explode=[0.05]*day_labels.size, colors=color_scale)
-    ax.set_title(f'{user_name}\'s Most Active Days')
-
-    file_name_days = f'./tmp/{data_id}-pie-chart-days.png'
-    fig.savefig(file_name_days)
-
-    return file_name_channels, file_name_days
+    return file_name_channels

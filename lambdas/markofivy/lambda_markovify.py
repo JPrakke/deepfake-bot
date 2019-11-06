@@ -1,7 +1,5 @@
 import markovify
 import boto3
-import json
-import os
 import gzip
 import uuid
 
