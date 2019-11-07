@@ -61,6 +61,16 @@ class DeepFakeBot(commands.Cog):
         else:
             await ctx.message.channel.send("'Usage: `df!extract <User#0000>`'")
 
+    @commands.command()
+    async def stats(self, ctx):
+        """Shares some stats with you"""
+        stats = db_queries.statistics(self.session)
+        result = 'Here stats about me:\n```'
+        for k in stats.keys():
+            result += f'{k}: {stats[k]}\n'
+        result += '```'
+        await ctx.send(result)
+
 
 app = commands.Bot(command_prefix='df!')
 app.add_cog(ConnectionManager(app))

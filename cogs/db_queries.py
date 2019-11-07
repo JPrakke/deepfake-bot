@@ -4,6 +4,8 @@ from cogs.db_schema import *
 from cogs.config import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy import distinct
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,13 +13,33 @@ logger = logging.getLogger(__name__)
 
 def check_connection(session):
     """Should show a healthy connection when the bot starts"""
-    result = session.query(Trainer).all()
-    logger.info(f'Connected... # of registered users: {len(result)}')
+    count_users = session.query(Trainer.id).count()
+    logger.info(f'Connected... # of registered users: {count_users}')
 
 
 def ping_connection(session):
     """Uses this to make sure the connection is kept open"""
     session.query(Trainer).first()
+
+
+def statistics(session):
+    """Counts all the records in each table"""
+    count_users = session.query(Trainer.id).count()
+    count_subjects = session.query(func.count(distinct(Subject.discord_id))).first()[0]
+    count_servers = session.query(func.count(distinct(Subject.server_id))).first()[0]
+    count_data_sets = session.query(DataSet.id).count()
+    count_filters = session.query(TextFilter.id).count()
+    count_models = session.query(MarkovModel.id).count()
+    count_deployments = session.query(Deployment.id).count()
+    return {
+        'Registered Users': count_users,
+        'Model Subjects': count_subjects,
+        'Servers': count_servers,
+        'Data Sets': count_data_sets,
+        'Filters Applied': count_filters,
+        'Markov Chain Models': count_models,
+        'Bots Deployed': count_deployments
+    }
 
 
 def register_trainer(session, ctx):
