@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class PlotCommands(lambda_commands.LambdaCommand):
 
     async def process_image_request(self, ctx, subject, request_data, lambda_name, command_name, message):
+        await self.bot.wait_until_ready()
 
         # Invoke the lambda function
         res_json = await self.invoke_lambda(ctx, lambda_name, request_data, command_name)
@@ -73,8 +74,10 @@ class PlotCommands(lambda_commands.LambdaCommand):
                     "filters": filters,
                     "dirty": False
                 }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
-                                                 'Wordcloud', f'Here are {subject.name}\'s favorite words:')
+                self.bot.loop.create_task(
+                    await self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
+                                               'Wordcloud', f'Here are {subject.name}\'s favorite words:')
+                )
         else:
             await ctx.message.channel.send(f'Usage: `df!wordcloud User#0000`')
 
@@ -91,8 +94,10 @@ class PlotCommands(lambda_commands.LambdaCommand):
                     "filters": filters,
                     "dirty": True
                 }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
-                                                 'Wordcloud', f'Here are {subject.name}\'s favorite swear words:')
+                self.bot.loop.create_task(
+                    self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
+                                               'Wordcloud', f'Here are {subject.name}\'s favorite swear words:')
+                )
         else:
             await ctx.send(f'Usage: `df!dirtywordcloud User#0000`')
 
@@ -107,10 +112,10 @@ class PlotCommands(lambda_commands.LambdaCommand):
                     "data_uid": data_id,
                     "user_name": subject.name
                 }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_activity_name,
+                self.bot.loop.create_task(self.process_image_request(
+                                          ctx, subject, request_data, config.lambda_activity_name,
                                                  'activity plot', '')
-                await ctx.message.channel.send(
-                      """Don\'t see a channel? Make sure I have permission to read it before running `df!extract`.""")
+                                          )
 
         else:
             await ctx.message.channel.send(f'Usage: `df!activity User#0000`')

@@ -1,8 +1,9 @@
 import os
 import logging
+import asyncio
 import discord
 from discord.ext import commands
-from cogs import extract
+from cogs import extract_util
 from cogs import db_queries
 from cogs.db_connection import ConnectionManager
 from cogs.db_connection import DeepFakeBotConnectionError
@@ -18,6 +19,7 @@ class DeepFakeBot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = None
+        self.generate_subject = None
 
     async def cog_check(self, ctx):
         """Refreshes the database connection and registers the user if not already done."""
@@ -52,14 +54,29 @@ class DeepFakeBot(commands.Cog):
         """Extracts chat history of a subject"""
         if subject:
             db_queries.register_subject(self.session, ctx, subject)
-            await ctx.message.channel.send(
+            await ctx.send(
                   f'Extracting chat history for {subject.name}... (This could take a few minutes).'
             )
             self.bot.loop.create_task(
-                extract.extract_chat_history(ctx, subject, self.bot)
+                extract_util.extract_chat_history(ctx, subject, self.bot)
             )
         else:
-            await ctx.message.channel.send("'Usage: `df!extract <User#0000>`'")
+            await ctx.send("'Usage: `df!extract <User#0000>`'")
+
+    @commands.command()
+    async def generate(self, ctx, *, subject: discord.Member = None):
+        """Runs all of the process steps needed to generate a model"""
+        if subject:
+            db_queries.register_subject(self.session, ctx, subject)
+            await ctx.send('Running step 1 of 4...')
+            await ctx.send(
+                  f'Extracting chat history for {subject.name}... (This could take a few minutes).'
+            )
+            self.bot.loop.create_task(
+                extract_util.extract_chat_history(ctx, subject, self.bot)
+            )
+        else:
+            await ctx.send("'Usage: `df!extract <User#0000>`'")
 
     @commands.command()
     async def stats(self, ctx):

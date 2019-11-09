@@ -8,43 +8,45 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+async def process_markovify_request(bot, ctx, subject_string, data_uid, filters, state_size, new_line):
+    #await bot.wait_until_ready()
+
+    request_data = {
+        "data_uid": data_uid,
+        "filters": filters,
+        "state_size": state_size,
+        "new_line": new_line,
+        "number_responses": 10
+    }
+
+    # Invoke the lambda function
+    lambda_cog = bot.get_cog('ModelCommands')
+    res_json = await lambda_cog.invoke_lambda(ctx, config.lambda_markov_name, request_data, 'Markovify')
+
+    if res_json:
+        sample_responses = res_json['body']
+        model_uid = res_json['model_uid']
+
+        await ctx.message.channel.send(
+            f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject_string}:'
+        )
+
+        for i in range(len(sample_responses)):
+            res = f'**Message {i + 1} of {len(sample_responses)}:**\n'
+            res += f'```{sample_responses[i]}```\n'
+            await ctx.message.channel.send(res)
+
+        # Lambda function has already added the files to S3. Here we just add a record to the database.
+        db_queries.create_markov_model(lambda_cog.session, data_uid, model_uid)
+
+    else:
+        # TODO: Write and link to 'Tips for Generating a Good Model'
+        await ctx.message.channel.send(
+            'Markov chain generation failed. Make sure you have enough data and that it is properly filtered.'
+        )
+
+
 class ModelCommands(lambda_commands.LambdaCommand):
-
-    async def process_markovify_request(self, ctx, subject_string, data_uid, filters, state_size, new_line):
-        await self.bot.wait_until_ready()
-
-        request_data = {
-            "data_uid": data_uid,
-            "filters": filters,
-            "state_size": state_size,
-            "new_line": new_line,
-            "number_responses": 10
-        }
-
-        # Invoke the lambda function
-        res_json = await self.invoke_lambda(ctx, config.lambda_markov_name, request_data, 'Markovify')
-
-        if res_json:
-            sample_responses = res_json['body']
-            model_uid = res_json['model_uid']
-
-            await ctx.message.channel.send(
-                f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject_string}:'
-            )
-
-            for i in range(len(sample_responses)):
-                res = f'**Message {i+1} of {len(sample_responses)}:**\n'
-                res += f'```{sample_responses[i]}```\n'
-                await ctx.message.channel.send(res)
-
-            # Lambda function has already added the files to S3. Here we just add a record to the database.
-            db_queries.create_markov_model(self.session, data_uid, model_uid)
-
-        else:
-            # TODO: Write and link to 'Tips for Generating a Good Model'
-            await ctx.message.channel.send(
-                  'Markov chain generation failed. Make sure you have enough data and that it is properly filtered.'
-            )
 
     @commands.group(name='markovify')
     async def markovify(self, ctx):
@@ -59,10 +61,10 @@ class ModelCommands(lambda_commands.LambdaCommand):
             filters = db_queries.find_filters(self.session, ctx, subject)
             if data_id:
                 state_size, newline = db_queries.get_markov_settings(self.session, ctx, subject)
+                await ctx.send('Markovify request submitted...')
                 self.bot.loop.create_task(
-                    self.process_markovify_request(ctx, subject.name, data_id, filters, state_size, newline)
+                    process_markovify_request(self.bot, ctx, subject.name, data_id, filters, state_size, newline)
                 )
-                await ctx.message.channel.send('Markovify request submitted...')
         else:
             await ctx.message.channel.send(f'Usage: `df!markovify User#0000`')
 

@@ -80,13 +80,15 @@ async def extract_chat_history(ctx, user_mention, bot):
     db_queries.create_data_set(session, ctx, user_mention, extraction_id)
 
     # Bot reply
-    await ctx.message.channel.send(f'Extraction complete for {user_mention}. Found {message_counter} messages:',
-                                   files=[discord.File(text_file_name),
-                                          discord.File(channel_file_name)])
+    await ctx.send(f'Extraction complete for {user_mention}. Found {message_counter} messages:',
+                   files=[discord.File(text_file_name), discord.File(channel_file_name)])
 
     # Cleanup local disk
     os.remove(text_file_name)
     os.remove(channel_file_name)
+
+    if ctx.invoked_with == 'generate':
+        await ctx.send('Starting task 2 or 4...')
 
 
 def upload_to_s3(file_name):
