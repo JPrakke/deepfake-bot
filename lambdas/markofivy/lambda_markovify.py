@@ -1,12 +1,14 @@
 import markovify
 import boto3
 import gzip
-import uuid
+
+UNIQUE_DELIMITER = '11a4b96a-ae8a-45f9-a4db-487cda63f5bd'
 
 
 def lambda_handler(event, context):
     # Read in arguments / event data
     data_uid = event['data_uid']
+    model_uid = event['model_uid']
     new_line = event['new_line']
     filters = event['filters']
     state_size = event['state_size']
@@ -23,7 +25,7 @@ def lambda_handler(event, context):
     with open('/tmp/' + text_file_name, 'rb') as f:
         g = gzip.GzipFile(fileobj=f)
         content = g.read().decode(). \
-            split('11a4b96a-ae8a-45f9-a4db-487cda63f5bd')
+            split(UNIQUE_DELIMITER)
 
     # Apply filters
     if filters == ['']:
@@ -50,17 +52,28 @@ def lambda_handler(event, context):
     # Generate responses
     responses = []
     for i in range(number_responses):
-        responses.append(text_model.make_sentence(tries=100))
+        responses.append(str(text_model.make_sentence(tries=100)))
+    if len(responses) > 1:
+        result = UNIQUE_DELIMITER.join(responses)
+    else:
+        result = 'Failed :('
 
     # Write results to compressed file
-    model_uid = str(uuid.uuid4().hex)
     model_file_name = f'{model_uid}-markov-model.json.gz'
     with gzip.open(f'/tmp/{model_file_name}', 'wb') as f:
         f.write(text_model.to_json().encode())
 
+    # Write sample responses to file
+    sample_repsonse_file_name = f'{model_uid}-sample-responses.txt'
+    with open(f'/tmp/{sample_repsonse_file_name}', 'w', encoding='utf-8') as f:
+        f.write(result)
+
     # Upload to S3
     s3.Object(aws_s3_bucket_prefix, model_file_name) \
         .upload_file(f'/tmp/{model_file_name}')
+
+    s3.Object(aws_s3_bucket_prefix, sample_repsonse_file_name) \
+        .upload_file(f'/tmp/{sample_repsonse_file_name}')
 
     return {
         'statusCode': 200,

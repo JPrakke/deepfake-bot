@@ -3,13 +3,14 @@ from wordcloud import WordCloud, STOPWORDS
 import multidict as multidict
 import boto3
 import gzip
+import json
 
 
 def lambda_handler(event, context):
-
     # Read in arguments / event data
     data_uid = event['data_uid']
     filters = event['filters']
+    wordcloud_file_name = event['wordcloud_file_name']
     dirty = event['dirty']
 
     # Download the data set from S3
@@ -40,20 +41,33 @@ def lambda_handler(event, context):
                 filtered_content.append(i)
 
     if dirty:
-        image_file_name = generate_dirty(filtered_content, data_uid)
+        swears = generate_dirty(filtered_content, wordcloud_file_name)
+        response = {
+            'statusCode': 200,
+            'swears': swears
+        }
+
     else:
-        image_file_name = generate(filtered_content, data_uid)
+        generate(filtered_content, wordcloud_file_name)
+        response = {
+            'statusCode': 200,
+            'total_messages': len(content),
+            'filtered_messages': len(filtered_content)
+        }
 
     # Upload to S3
-    s3.Object(aws_s3_bucket_prefix, image_file_name) \
-        .upload_file(f'/tmp/{image_file_name}')
+    s3.Object(aws_s3_bucket_prefix, wordcloud_file_name) \
+        .upload_file(f'/tmp/{wordcloud_file_name}')
 
-    return {
-        'statusCode': 200,
-        'image_file_names': [image_file_name],
-        'total_messages': len(content),
-        'filtered_messages': len(filtered_content)
-    }
+    # Upload the response to S3 as a .json file
+    response_file_name = wordcloud_file_name.replace('.png', '.json')
+    with open(f'/tmp/{response_file_name}', 'w') as f:
+        f.write(json.dumps(response))
+
+    s3.Object(aws_s3_bucket_prefix, response_file_name) \
+        .upload_file(f'/tmp/{response_file_name}')
+
+    return response
 
 
 def get_frequency_dict(sentence):
@@ -72,7 +86,7 @@ def get_frequency_dict(sentence):
     return full_terms_dict
 
 
-def generate_dirty(content, data_id):
+def generate_dirty(content, file_name):
     """Makes a word cloud of swear words for a subject. No filters applied."""
     content = ' '.join(content)
 
@@ -99,12 +113,11 @@ def generate_dirty(content, data_id):
     fig.add_axes(ax)
     ax.imshow(wc, interpolation='bilinear')
 
-    file_name = f'{data_id}-dirty-word-cloud.png'
     fig.savefig(f'/tmp/{file_name}')
-    return file_name
+    return True
 
 
-def generate(selected_content, data_id):
+def generate(selected_content, file_name):
     """Makes a wordcloud of a user's messages with filters applied"""
     wc = WordCloud(background_color="black",
                    stopwords=STOPWORDS,
@@ -119,6 +132,4 @@ def generate(selected_content, data_id):
     fig.add_axes(ax)
     ax.imshow(wc, interpolation='bilinear')
 
-    file_name = f'{data_id}-word-cloud.png'
     fig.savefig(f'/tmp/{file_name}')
-    return file_name

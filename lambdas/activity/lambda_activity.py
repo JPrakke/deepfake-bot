@@ -15,6 +15,7 @@ def lambda_handler(event, context):
     # Read in arguments / event data
     data_uid = event['data_uid']
     user_name = event['user_name']
+    image_uid = event['image_uid']
 
     # Download the data set from S3
     data_file_name = f'{data_uid}-channels.csv.gz'
@@ -24,8 +25,8 @@ def lambda_handler(event, context):
         .download_file(data_file_name, '/tmp/' + data_file_name)
 
     # Make the plots
-    activity_file = time_series_chart(data_uid, user_name)
-    channels_file = channels_chart(data_uid, user_name)
+    activity_file = time_series_chart(data_uid, image_uid, user_name)
+    channels_file = channels_chart(data_uid, image_uid, user_name)
 
     # Upload to S3
     s3.Object(aws_s3_bucket_prefix, activity_file).upload_file(f'/tmp/{activity_file}')
@@ -77,7 +78,7 @@ def auto_time_scale(td):
     return date_format, major_tick
 
 
-def time_series_chart(data_id, user_name):
+def time_series_chart(data_id, image_uid, user_name):
     """Plots a user's activity over time. I.e. number of messages vs. date"""
 
     # Open our file from S3 and read in the
@@ -113,12 +114,12 @@ def time_series_chart(data_id, user_name):
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
-    file_name = f'{data_id}-activity.png'
+    file_name = f'{image_uid}-activity.png'
     fig.savefig(f'/tmp/{file_name}')
     return file_name
 
 
-def channels_chart(data_id, user_name):
+def channels_chart(data_id, image_uid, user_name):
     """Plots a user's most active channels"""
 
     # Open our file from S3 and read in the
@@ -141,7 +142,7 @@ def channels_chart(data_id, user_name):
     ax.pie(pie_values, labels=pie_labels, autopct='%1.1f%%', explode=[0.05]*pie_labels.size, colors=color_scale)
     ax.set_title(f'{user_name}\'s Favorite Channels')
 
-    file_name_channels = f'{data_id}-pie-chart-channels.png'
+    file_name_channels = f'{image_uid}-pie-chart-channels.png'
     fig.savefig(f'/tmp/{file_name_channels}')
 
     return file_name_channels

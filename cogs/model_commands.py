@@ -4,49 +4,58 @@ from cogs import db_queries
 from cogs import config
 from cogs import lambda_commands
 import logging
+import uuid
+import os
 
 logger = logging.getLogger(__name__)
 
 
-async def process_markovify_request(bot, ctx, subject_string, data_uid, filters, state_size, new_line):
-    #await bot.wait_until_ready()
+class ModelCommands(lambda_commands.LambdaCommand):
+    """Commands related to generating Markov chain models"""
 
-    request_data = {
-        "data_uid": data_uid,
-        "filters": filters,
-        "state_size": state_size,
-        "new_line": new_line,
-        "number_responses": 10
-    }
+    async def markovify_response(self, ctx, subject, model_uid):
+        """What the bot should do if a Markov chain model is successfully generated"""
 
-    # Invoke the lambda function
-    lambda_cog = bot.get_cog('ModelCommands')
-    res_json = await lambda_cog.invoke_lambda(ctx, config.lambda_markov_name, request_data, 'Markovify')
+        # Open the file
+        sample_response_file_name = f'./tmp/{model_uid}-sample-responses.txt'
+        with open(sample_response_file_name, encoding='utf-8') as f:
+            responses = f.read().split(config.unique_delimiter)
 
-    if res_json:
-        sample_responses = res_json['body']
-        model_uid = res_json['model_uid']
-
+        # Respond
         await ctx.message.channel.send(
-            f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject_string}:'
+            f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject.name}:'
         )
 
-        for i in range(len(sample_responses)):
-            res = f'**Message {i + 1} of {len(sample_responses)}:**\n'
-            res += f'```{sample_responses[i]}```\n'
+        for i in range(len(responses)):
+            res = f'**Message {i + 1} of {len(responses)}:**\n'
+            res += f'```{responses[i]}```\n'
             await ctx.message.channel.send(res)
 
-        # Lambda function has already added the files to S3. Here we just add a record to the database.
-        db_queries.create_markov_model(lambda_cog.session, data_uid, model_uid)
+        # Cleanup
+        os.remove(sample_response_file_name)
 
-    else:
-        # TODO: Write and link to 'Tips for Generating a Good Model'
-        await ctx.message.channel.send(
-            'Markov chain generation failed. Make sure you have enough data and that it is properly filtered.'
-        )
+    async def process_markovify(self, ctx, subject, data_uid, filters, state_size, new_line):
+        model_uid = str(uuid.uuid4().hex)
+        sample_response_file_name = f'{model_uid}-sample-responses.txt'
 
+        request_data = {
+            "data_uid": data_uid,
+            "model_uid": model_uid,
+            "filters": filters,
+            "state_size": state_size,
+            "new_line": new_line,
+            "number_responses": 10
+        }
 
-class ModelCommands(lambda_commands.LambdaCommand):
+        # Invoke the lambda function
+        ok = await self.get_lambda_files(config.lambda_markov_name, request_data, [sample_response_file_name], 10,
+                                         self.markovify_response, ctx, subject, model_uid)
+
+        if not ok:
+            # TODO: add link to documentation
+            await ctx.send('Markov chain generator failed.')
+        else:
+            db_queries.create_markov_model(self.session, data_uid, model_uid)
 
     @commands.group(name='markovify')
     async def markovify(self, ctx):
@@ -62,9 +71,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             if data_id:
                 state_size, newline = db_queries.get_markov_settings(self.session, ctx, subject)
                 await ctx.send('Markovify request submitted...')
-                self.bot.loop.create_task(
-                    process_markovify_request(self.bot, ctx, subject.name, data_id, filters, state_size, newline)
-                )
+                await self.process_markovify(ctx, subject, data_id, filters, state_size, newline)
         else:
             await ctx.message.channel.send(f'Usage: `df!markovify User#0000`')
 
