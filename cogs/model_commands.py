@@ -55,7 +55,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             # TODO: add link to documentation
             await ctx.send('Markov chain generator failed.')
         else:
-            db_queries.create_markov_model(self.session, data_uid, model_uid)
+            db_queries.create_markov_model(self.parent_cog.session, data_uid, model_uid)
 
     @commands.group(name='markovify')
     async def markovify(self, ctx):

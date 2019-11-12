@@ -68,6 +68,13 @@ class PlotCommands(lambda_commands.LambdaCommand):
                            f'Activity plot request timed out. Maybe try again. You can also report this here:'
                            f' {config.report_issue_url}'
                           )
+        elif ctx.invoked_with == 'generate':
+            # Start the next step in the process...
+
+            await ctx.send('Starting task 3 of 4...')
+            filters = db_queries.find_filters(self.parent_cog.session, ctx, subject)
+            await ctx.send('Wordcloud request submitted...')
+            await self.process_wordcloud(ctx, subject, data_uid, filters)
 
     async def process_wordcloud(self, ctx, subject, data_uid, filters, dirty=False):
         """Function for handling wordcloud plots. Need to make this separate from the command so it can be called by
@@ -92,6 +99,14 @@ class PlotCommands(lambda_commands.LambdaCommand):
                            f'Wordcloud request timed out. Maybe try again. You can also report this here:'
                            f' {config.report_issue_url}'
                           )
+        elif ctx.invoked_with == 'generate':
+            # Start the last step in the process...
+
+            await ctx.send('Starting task 4 of 4...')
+            state_size, newline = db_queries.get_markov_settings(self.parent_cog.session, ctx, subject)
+            markov_cog = self.bot.get_cog('ModelCommands')
+            await ctx.send('Markovify request submitted...')
+            await markov_cog.process_markovify(ctx, subject, data_uid, filters, state_size, newline)
 
     @commands.command()
     async def wordcloud(self, ctx, *, subject: discord.Member):

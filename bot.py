@@ -68,7 +68,7 @@ class DeepFakeBot(commands.Cog):
         """Runs all of the process steps needed to generate a model"""
         if subject:
             db_queries.register_subject(self.session, ctx, subject)
-            await ctx.send('Running step 1 of 4...')
+            await ctx.send('Starting task 1 of 4...')
             await ctx.send(
                   f'Extracting chat history for {subject.name}... (This could take a few minutes).'
             )
@@ -82,7 +82,7 @@ class DeepFakeBot(commands.Cog):
     async def stats(self, ctx):
         """Shares some stats with you"""
         stats = db_queries.statistics(self.session)
-        result = 'Here stats about me:\n```'
+        result = 'Here are some stats about me:\n```'
         for k in stats.keys():
             result += f'{k}: {stats[k]}\n'
         result += '```'
