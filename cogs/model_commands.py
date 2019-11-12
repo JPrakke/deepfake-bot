@@ -53,7 +53,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
 
         if not ok:
             # TODO: add link to documentation
-            await ctx.send('Markov chain generator failed.')
+            await ctx.send(f'Markov chain generator failed for {subject.name}.')
         else:
             db_queries.create_markov_model(self.parent_cog.session, data_uid, model_uid)
 
