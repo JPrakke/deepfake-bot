@@ -5,60 +5,108 @@ from cogs import lambda_commands
 from cogs import config
 import os
 import logging
+import uuid
+import json
 
 logger = logging.getLogger(__name__)
 
 
 class PlotCommands(lambda_commands.LambdaCommand):
 
-    async def process_image_request(self, ctx, subject, request_data, lambda_name, command_name, message):
-
-        # Invoke the lambda function
-        res_json = await self.invoke_lambda(ctx, lambda_name, request_data, command_name)
-
-        # Read the results
-        if res_json:
-            image_file_names = res_json['image_file_names']
-            try:
-                total_messages = res_json['total_messages']
-                filtered_messages = res_json['filtered_messages']
-            except KeyError:
-                total_messages = None
-                filtered_messages = None
-        else:
-            await ctx.message.channel.send(
-                'Hmmm... I seem to be having trouble with your request. Maybe try again. You can also report this here:'
-                f' {config.report_issue_url}'
-            )
-            return
-
-        # Get the "dirty" flag
-        try:
-            dirty = request_data['dirty']
-        except KeyError:
-            dirty = False
-
-        # If everything is ok...
+    async def activity_reponse(self, ctx, subject, image_file_names):
+        """What the bot should do if activity plots are successfully generated"""
         for image_file_name in image_file_names:
-
-            # Get the file from S3
-            with open(f'./tmp/{image_file_name}', 'wb') as f:
-                self.s3_client.download_fileobj(config.aws_s3_bucket_prefix, image_file_name, f)
-
-            # Send it to discord
-            await ctx.message.channel.send(message, file=discord.File(f'./tmp/{image_file_name}'))
-            # Cleanup
+            await ctx.send(f'', file=discord.File(f'./tmp/{image_file_name}'))
             os.remove(f'./tmp/{image_file_name}')
 
-            # Message...
-            if dirty:
-                await ctx.send('What a potty mouth!')
-            if total_messages:
-                await ctx.send(f'Using {filtered_messages} of {total_messages} messages.')
+    async def wordcloud_response(self, ctx, subject, image_file_name, response_file_name, dirty=False):
+        """What the bot should do if a wordcloud is  successfully generated"""
+        with open(f'./tmp/{response_file_name}') as f:
+            response = json.loads(f.read())
 
-        # In case there are no swear words
-        if len(image_file_names) == 0 and dirty:
-            await ctx.send(f'Hmmm... {subject.name} doesn\'t seem to use bad language.')
+        if not dirty:
+            total_messages = response['total_messages']
+            filtered_messages = response['filtered_messages']
+            await ctx.send(f'Here are {subject}\'s favorite words:', file=discord.File(f'./tmp/{image_file_name}'))
+            await ctx.send(f'Using {filtered_messages} of {total_messages} messages.')
+        else:
+            swears = response['swears']
+            if swears:
+                await ctx.send(f'Here are {subject.name}\'s favorite words:',
+                               file=discord.File(f'./tmp/{image_file_name}'))
+                await ctx.send('What a potty mouth!')
+            else:
+                await ctx.send(f'Hmmm... {subject.name} doesn\'t seem to use bad language')
+
+        # Cleanup
+        os.remove(f'./tmp/{image_file_name}')
+        os.remove(f'./tmp/{response_file_name}')
+
+    async def process_activity(self, ctx, subject, data_uid):
+        """Function for handling activity plots. Need to make this separate from the command so it can be called by
+        df!generate"""
+        image_uid = str(uuid.uuid4().hex)
+
+        payload = {
+            'data_uid': data_uid,
+            'user_name': subject.name,
+            'image_uid': image_uid
+        }
+
+        activity_file_name = f'{image_uid}-activity.png'
+        file_name_channels = f'{image_uid}-pie-chart-channels.png'
+
+        expected_files = [activity_file_name, file_name_channels]
+
+        # Invoke the lambda function
+        ok = await self.get_lambda_files(config.lambda_activity_name, payload,
+                                         expected_files, 10,
+                                         self.activity_reponse, ctx, subject, expected_files)
+
+        if not ok:
+            await ctx.send(
+                           f'Activity plot request timed out. Maybe try again. You can also report this here:'
+                           f' {config.report_issue_url}'
+                          )
+        elif ctx.invoked_with == 'generate':
+            # Start the next step in the process...
+
+            await ctx.send('Starting task 3 of 4...')
+            filters = db_queries.find_filters(self.parent_cog.session, ctx, subject)
+            await ctx.send('Wordcloud request submitted...')
+            await self.process_wordcloud(ctx, subject, data_uid, filters)
+
+    async def process_wordcloud(self, ctx, subject, data_uid, filters, dirty=False):
+        """Function for handling wordcloud plots. Need to make this separate from the command so it can be called by
+        df!generate"""
+
+        wordcloud_file_name = str(uuid.uuid4().hex) + '-word-cloud.png'
+        response_file_name = wordcloud_file_name.replace('.png', '.json')
+
+        payload = {'data_uid': data_uid,
+                   'filters': filters,
+                   'wordcloud_file_name': wordcloud_file_name,
+                   'dirty': dirty}
+
+        # Invoke the lambda function
+        ok = await self.get_lambda_files(config.lambda_wordcloud_name, payload,
+                                         [wordcloud_file_name, response_file_name], 10,
+                                         self.wordcloud_response, ctx, subject, wordcloud_file_name,
+                                         response_file_name, dirty)
+
+        if not ok:
+            await ctx.send(
+                           f'Wordcloud request timed out. Maybe try again. You can also report this here:'
+                           f' {config.report_issue_url}'
+                          )
+        elif ctx.invoked_with == 'generate':
+            # Start the last step in the process...
+
+            await ctx.send('Starting task 4 of 4...')
+            state_size, newline = db_queries.get_markov_settings(self.parent_cog.session, ctx, subject)
+            markov_cog = self.bot.get_cog('ModelCommands')
+            await ctx.send('Markovify request submitted...')
+            await markov_cog.process_markovify(ctx, subject, data_uid, filters, state_size, newline)
 
     @commands.command()
     async def wordcloud(self, ctx, *, subject: discord.Member):
@@ -68,13 +116,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
             if data_id:
                 filters = db_queries.find_filters(self.session, ctx, subject)
                 await ctx.send('Wordcloud request submitted...')
-                request_data = {
-                    "data_uid": data_id,
-                    "filters": filters,
-                    "dirty": False
-                }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
-                                                 'Wordcloud', f'Here are {subject.name}\'s favorite words:')
+                await self.process_wordcloud(ctx, subject, data_id, filters)
         else:
             await ctx.message.channel.send(f'Usage: `df!wordcloud User#0000`')
 
@@ -86,13 +128,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
             if data_id:
                 filters = db_queries.find_filters(self.session, ctx, subject)
                 await ctx.send('Wordcloud request submitted...')
-                request_data = {
-                    "data_uid": data_id,
-                    "filters": filters,
-                    "dirty": True
-                }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_wordcloud_name,
-                                                 'Wordcloud', f'Here are {subject.name}\'s favorite swear words:')
+                await self.process_wordcloud(ctx, subject, data_id, filters, True)
         else:
             await ctx.send(f'Usage: `df!dirtywordcloud User#0000`')
 
@@ -103,14 +139,6 @@ class PlotCommands(lambda_commands.LambdaCommand):
             data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
             if data_id:
                 await ctx.send('Activity plot request submitted...')
-                request_data = {
-                    "data_uid": data_id,
-                    "user_name": subject.name
-                }
-                await self.process_image_request(ctx, subject, request_data, config.lambda_activity_name,
-                                                 'activity plot', '')
-                await ctx.message.channel.send(
-                      """Don\'t see a channel? Make sure I have permission to read it before running `df!extract`.""")
-
+                await self.process_activity(ctx, subject, data_id)
         else:
             await ctx.message.channel.send(f'Usage: `df!activity User#0000`')
