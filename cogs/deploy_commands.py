@@ -74,8 +74,8 @@ class DeployCommands(commands.Cog):
             await ctx.send(f'Here are the model artifacts for {subject.name}\'s bot:',
                            files=[discord.File(f'./tmp/{encrypted_file_name}'),
                                   discord.File(f'./tmp/{config_file_name}')])
-            await ctx.send(f'{subject.name}\'s avatar can be downloaded from: {subject.avatar_url_as()}')
             await ctx.message.author.send(f'Your secret key for {subject.name}\'s bot: `{key.decode()}`')
+            await ctx.message.author.send(f'{subject.name}\'s avatar can be downloaded from: {subject.avatar_url_as()}')
 
             # Cleanup disk
             os.remove(f'./tmp/{encrypted_file_name}')
