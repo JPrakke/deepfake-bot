@@ -26,6 +26,7 @@ def lambda_handler(event, context):
 
     # Make the plots
     activity_file = time_series_chart(data_uid, image_uid, user_name)
+
     channels_file = channels_chart(data_uid, image_uid, user_name)
 
     # Upload to S3
@@ -40,13 +41,10 @@ def lambda_handler(event, context):
 
 def day_filler(dates, counts):
     """Returns completed lists of dates and message counts with 0's added to every day with no messages"""
-    def date_range(start_date, end_date):
-        for n in range(int((end_date - start_date).days)):
-            yield start_date + dt.timedelta(n)
-
     filled_dates = []
     filled_counts = []
-    for single_date in date_range(dates.min(), dates.max()):
+    for n in range(int((dates.max() - dates.min()).days) + 1):
+        single_date = dates.min() + dt.timedelta(n)
         filled_dates.append(single_date)
         if single_date in dates:
             i = np.where(dates == single_date)
@@ -62,18 +60,15 @@ def auto_time_scale(td):
     if td.days > 365:
         date_format = mdates.DateFormatter('%Y')
         major_tick = mdates.YearLocator()
-    elif td.days > 30:
+    elif td.days > 65:
         date_format = mdates.DateFormatter('%b-%Y')
         major_tick = mdates.MonthLocator()
-    elif td.days > 7:
+    elif td.days > 15:
         date_format = mdates.DateFormatter('%d %b-%Y')
         major_tick = mdates.DayLocator(interval=7)
-    elif td.days > 1:
+    else:
         date_format = mdates.DateFormatter('%d %b-%Y')
         major_tick = mdates.DayLocator()
-    else:
-        date_format = mdates.DateFormatter('%H:%M:%S')
-        major_tick = mdates.HourLocator()
 
     return date_format, major_tick
 
@@ -83,7 +78,10 @@ def time_series_chart(data_id, image_uid, user_name):
 
     # Open our file from S3 and read in the
     data_file_name = f'/tmp/{data_id}-channels.csv.gz'
-    df = pd.read_csv(data_file_name, compression='gzip', encoding='utf-8')
+    try:
+        df = pd.read_csv(data_file_name, compression='gzip', encoding='utf-8')
+    except FileNotFoundError:
+        df = pd.read_csv('.' + data_file_name, compression='gzip', encoding='utf-8')
 
     # Some data transformations
     df['datetime'] = df['timestamp'].apply(lambda t: dt.datetime.fromtimestamp(t))
@@ -105,17 +103,22 @@ def time_series_chart(data_id, image_uid, user_name):
     ax.set_ylabel('# messages')
 
     message_date_range = df['datetime'].max() - df['datetime'].min()
-    auto_format, auto_tick = auto_time_scale(message_date_range)
 
-    ax.xaxis.set_major_formatter(auto_format)
-    ax.xaxis.set_major_locator(auto_tick)
+    if len(filled_dates) > 1:
+        auto_format, auto_tick = auto_time_scale(message_date_range)
+        ax.xaxis.set_major_formatter(auto_format)
+        ax.xaxis.set_major_locator(auto_tick)
+
     ax.grid()
-
     for tick in ax.get_xticklabels():
         tick.set_rotation(45)
 
     file_name = f'{image_uid}-activity.png'
-    fig.savefig(f'/tmp/{file_name}')
+    try:
+        fig.savefig(f'/tmp/{file_name}')
+    except FileNotFoundError:
+        fig.savefig(f'./tmp/{file_name}')
+
     return file_name
 
 
