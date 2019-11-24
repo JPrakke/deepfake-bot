@@ -56,16 +56,24 @@ class DeployCommands(commands.Cog):
             key, encrypted_file_name = self.download_and_encrypt(model_uid)
             db_queries.create_deployment(self.session, ctx, model_uid, key.decode())
 
-            #TODO: update this
             # Create a config file with default settings
             default_settings = {'reply_probability': 0.3,
                                 'new_conversation_min_wait': 60,
                                 'new_conversation_max_wait': 3600,
-                                'max_sentence_length': 250,
+                                'max_sentence_length': 500,
+                                "max_markov_chains": 100,
+                                'selection_algorithm': 'cosine_similarity',
                                 'quiet_mode': False,
+                                'avg_delay': 2,
+                                'std_dev_delay': 2,
+                                'min_delay': 0.5,
+                                'avg_typing_speed': 60,
+                                'std_dev_typing_speed': 10,
+                                'min_typing_speed': 40,
                                 'white_list_server_ids': [ctx.message.guild.id],
-                                'favorite_words': ['']
+                                'owner_id': ctx.message.author.id
                                 }
+
             config_file_name = f'{model_uid}-config.json'
             with open(f'./tmp/{config_file_name}', 'w') as f:
                 f.write(json.dumps(default_settings, indent=4, separators=(',', ': ')))
