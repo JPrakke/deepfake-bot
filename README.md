@@ -53,7 +53,7 @@ Setup a VPC with public and private subnets. Traffic on port 3306 should be allo
     * `DEEPFAKE_AWS_ACCESS_KEY_ID`
     * `DEEPFAKE_DISCORD_TOKEN`
     * `DEEPFAKE_SECRET_ACCESS_KEY`
-    * `DEEPFAKE_DATABASE_STRING` - this should look like so: ```mysql://[master user]:[master pw]@[RDS endpoint url]:1234/[production schema name]?charset=utf8```
+    * `DEEPFAKE_DATABASE_STRING` - this should look like so: ```mysql://[master user]:[master pw]@[RDS endpoint url]:3306/[production schema name]?charset=utf8```
 
 ### Lambas
 
