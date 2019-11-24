@@ -32,9 +32,9 @@ Setup a VPC with public and private subnets. Traffic on port 3306 should be allo
 
 ### S3
 
-1. Create a private bucket with a policy where objects expire every 24 hours. Change the name in [./cogs/config.py](./cogs/config.py).
+1. Create a private bucket with a policy where objects expire every 24 hours. Change the name in [config.py](./cogs/config.py).
 
-2. Create another bucket with no expiration policy. Change the name in [my_bucket.sh](./lambdas/build_layer.sh).
+2. Create another bucket with no expiration policy. Change the `my_bucket` variable in [build_layer.sh](./lambdas/build_layer.sh).
 
 3. Create an IAM user with full permissions to these. Save the credentials to the `DEEPFAKE_AWS_ACCESS_KEY_ID` and `DEEPFAKE_SECRET_ACCESS_KEY` environment variables.
 
