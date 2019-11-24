@@ -1,6 +1,8 @@
 Data Retention
 ==============
 
+.. image:: https://deepfake-discord-bot-permanent.s3.amazonaws.com/Zuck.PNG
+
 FAQ
 ---
 
