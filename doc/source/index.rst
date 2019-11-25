@@ -2,13 +2,14 @@ Deepfake Bot
 ============
 
 Make copies of your friends! Do you run a discord server? Does it have `that` person? Now you can mock and immortalize them by 
-converting them into a robot.
+converting him or her into a robot.
 
 .. toctree::
-   :hidden:
-   :maxdepth: 4
+   :maxdepth: 2
 
    how-to
-   commands
+   model-tuning
    self-deployments
-   data-retention
+   hosted-deployments
+   commands
+   privacy

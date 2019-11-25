@@ -1,5 +1,5 @@
-Data Retention
-==============
+Privacy
+=======
 
 .. image:: https://deepfake-discord-bot-permanent.s3.amazonaws.com/Zuck.PNG
 
@@ -8,12 +8,12 @@ FAQ
 
 What exactly are you doing with my data?
 ````````````````````````````````````````
-As little as possible. I don't really want your data. I have no intention of selling any information or monetizing this beyond Patreon 
+As little as possible. I don't really want your data. I have no intention of selling anyone's information or monetizing this beyond Patreon 
 contributions. For the bot to function, however, it needs to read your servers' chat histories. And I do store some of these temporarily.
 
 What sort of information do you store?
 ``````````````````````````````````````
-Messages authored by your model subjects are uploaded as flat text files into an S3 bucket with a policy where objects expire every 24 hours. 
+Messages authored by your model subjects are uploaded as flat text files into a private S3 bucket with a policy where objects expire every 24 hours. 
 I also permanently store some information in a SQL database. For instance: your discord id and user name, your discord server id, any text 
 filters you have applied. You can view the database schema `here <https://github.com/rustygentile/deepfake-bot/blob/master/cogs/db_schema.py>`_.
 

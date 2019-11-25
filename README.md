@@ -4,27 +4,29 @@ Make copies of your friends! Using the magic of cloud computing, [markov](https:
 
 ## Users
 
-[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your discord server. Then go [read](https://deepfake-bot.readthedocs.io/) about how to use it.
+[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your discord server. Then go [read](https://deepfake-bot.readthedocs.io/) about how to use it. If you're feeling generous, you can also give me some [money](https://www.patreon.com/rustygentile).
 
 ## Developers
 
-This is meant to be a rough outline of the steps and AWS resources needed to get this project up and running. It is not a precise how-to as I'm probably forgetting one or more steps. If you're a normal user ready deploy your bot, skip this and see [here](https://deepfake-bot.readthedocs.io/en/latest/self-deployments.html) instead.
+This is meant to be a rough outline of the steps and AWS resources needed to get this project up and running. It is not a precise how-to as I'm probably forgetting one or more steps. If you're a normal user ready deploy your bot, skip this section and see [here](https://deepfake-bot.readthedocs.io/en/latest/self-deployments.html) instead.
 
 ### VPC
 
-Setup a VPC with public and private subnets. Traffic on port 3306 should be allowed between them.
+Setup a VPC with public and private subnets. Traffic on port 3306 should be allowed between them. Create the needed security groups.
 
 ### Database
 
 1. Provision a MySQL RDS instance in one of your private subnets. Create a master user and password.
+
 2. Provision an EC2 instance in one of your public subnets.
-3. Use an SSH tunnel to this to enable a database connection from a terminal in your development environment: ```ssh -N -L 1234:[RDS endpoint url]:3306 ec2-user@[ec2 IP address] -i [path to ec2 key]```
+
+3. Use an SSH tunnel to this to enable a database connection from a terminal on your development machine: ```ssh -N -L 1234:[RDS endpoint url]:3306 ec2-user@[ec2 IP address] -i [path to ec2 key]```
 
 4. Open a connection in MySQL workbench on 127.0.0.1 and port 1234. Use the master user and password you created.
 
-5. Create 'production' and 'test' schemas.
+5. Create 'production' and 'test' schemas. Don't add any tables yet.
 
-6. Assemble your `DEEPFAKE_DATABASE_STRING` variable. For your local development environment this sould look like so: ```mysql://[master user]:[master pw]@127.0.0.1:1234/[test schema name]?charset=utf8```
+6. Assemble your `DEEPFAKE_DATABASE_STRING` variable. For your development machine this sould look like so: ```mysql://[master user]:[master pw]@127.0.0.1:1234/[test schema name]?charset=utf8```
 
 7. Run [db_queries.py](./cogs/db_queries.py) to create the tables.
 
