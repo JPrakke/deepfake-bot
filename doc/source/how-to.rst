@@ -18,7 +18,7 @@ To generate a model of your target user, execute:
 .. image:: https://deepfake-discord-bot-permanent.s3.amazonaws.com/generate_start.PNG
 
 This will likely take a few minutes. The bot will read your server's chat history, give you some stats on your subject's messages, and 
-generate a Markov chain model that mimics them. If, at the end of the process you get something that sounds like your subject you can 
+generate a Markov chain model that mimics them. If, at the end of the process, you get something that sounds like your subject, you can 
 proceed. Note the ``model_uid`` that gets generated:
 
 .. image:: https://deepfake-discord-bot-permanent.s3.us-east-1.amazonaws.com/good_markov.PNG

@@ -4,7 +4,7 @@ Make copies of your friends! Using the magic of cloud computing, [markov](https:
 
 ## Users
 
-[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your discord server. Then go [read](https://deepfake-bot.readthedocs.io/) about how to use it. If you're feeling generous, you can also give me some [money](https://www.patreon.com/rustygentile).
+[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your discord server. Then go [read](https://deepfake-bot.readthedocs.io/) about how to use it. If you're feeling generous, you're also welcome to give me some [money](https://www.patreon.com/rustygentile).
 
 ## Developers
 
