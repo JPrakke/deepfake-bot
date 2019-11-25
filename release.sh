@@ -28,7 +28,7 @@ rm -r deploy
 
 MAJOR_VERSION=1 # <---to make a major or minor release these should be edited and committed
 MINOR_VERSION=0
-PATCH_VERSION=7
+PATCH_VERSION=8
 
 echo "Tagging in git..."
 git tag v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION
