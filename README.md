@@ -4,7 +4,10 @@ Make copies of your friends! Using the magic of cloud computing, [markov](https:
 
 ## Users
 
-[Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your discord server. Then go [read](https://deepfake-bot.readthedocs.io/) about how to use it. You're also welcome to give me some [money](https://www.patreon.com/rustygentile) if you're feeling generous.
+* [Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your Discord server.
+* [Read](https://deepfake-bot.readthedocs.io/) about how to use it.
+* Get [help](https://discord.gg/JGudz9G) with your bot if you get stuck. 
+* [Donate](https://www.patreon.com/rustygentile) to keep the bot up and running.
 
 ## Developers
 
@@ -12,7 +15,9 @@ This is meant to be a rough outline of the steps and AWS resources needed to get
 
 ### VPC
 
-Setup a VPC with public and private subnets. Traffic on port 3306 should be allowed between them. Create the needed security groups.
+* Setup a VPC with public and private subnets.
+* Setup a route table to allow traffic in the public subnets to an internet gateway.
+* In the private subnet, allow only traffic to and from the public subnet.
 
 ### Database
 
@@ -38,7 +43,6 @@ Setup a VPC with public and private subnets. Traffic on port 3306 should be allo
 * Create an IAM instance profile.
 * Head over to https://discordapp.com/developers and create an app for your bot. Grab its token. While you're at it, create another app for testing.
 * Add the following environment variables:
-
     * `DEEPFAKE_AWS_ACCESS_KEY_ID`
     * `DEEPFAKE_DISCORD_TOKEN`
     * `DEEPFAKE_SECRET_ACCESS_KEY`
@@ -49,11 +53,13 @@ Setup a VPC with public and private subnets. Traffic on port 3306 should be allo
 * From an EC2 instance, clone the project and run [build_layer.sh](./lambdas/build_layer.sh) to gather the python libraries. This will copy them to your permanent S3 container. Create a Lambda layer from this.
 * Create three python lamba functions from [activity](./lambdas/activity/), [markovify](./lambdas/markovify/) and [wordcloud](./lambas/wordcloud/) using your layer. You'll need to give them new names. Then add these names to [config.py](./cogs/config.py).
 * Give your EBS's IAM instance profile permission to run them.
+* Lambda functions should run in the private subnet. 
 
 ### Testing 
 
 * Setup your IDE. I use pycharm, Anaconda, and [this](https://plugins.jetbrains.com/plugin/7861-envfile/) to manage environment variables. You may want to use a different `DEEPFAKE_DISCORD_TOKEN` and `DEEPFAKE_DATABASE_STRING` locally than in EBS. 
 * With the SSH tunnel to your database open, run [bot.py](bot.py). Try out all of the bot commands.
+* There are unit tests in the [test](./test/) folder but there is no CI setup. The release script will work regardless of whether the tests pass or not.
 
 ### Release
 

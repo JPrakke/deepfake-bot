@@ -8,6 +8,7 @@ Links
 -----
 
 * Source - https://github.com/rustygentile/deepfake-bot
+* Discord - https://discord.gg/JGudz9G
 * Patreon - https://www.patreon.com/rustygentile
 
 Table of Contents
