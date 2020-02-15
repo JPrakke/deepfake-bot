@@ -20,6 +20,7 @@ class DeepFakeBot(commands.Cog):
         self.bot = bot
         self.session = None
         self.generate_subject = None
+        self.extraction_task_users = []
 
     async def cog_check(self, ctx):
         """Refreshes the database connection and registers the user if not already done."""
@@ -53,30 +54,36 @@ class DeepFakeBot(commands.Cog):
     async def extract(self, ctx, *, subject: discord.Member = None):
         """Extracts chat history of a subject"""
         if subject:
-            db_queries.register_subject(self.session, ctx, subject)
-            await ctx.send(
-                  f'Extracting chat history for {subject.name}... (This could take a few minutes).'
-            )
-            self.bot.loop.create_task(
-                extract_util.extract_chat_history(ctx, subject, self.bot)
-            )
+            if ctx.author.id in self.extraction_task_users:
+                await ctx.send('Please wait until your other extraction task is complete.')
+            else:
+                db_queries.register_subject(self.session, ctx, subject)
+                await ctx.send(
+                    f'Extracting chat history for {subject.name}...'
+                )
+                self.bot.loop.create_task(
+                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                )
         else:
-            await ctx.send("'Usage: `df!extract <User#0000>`'")
+            await ctx.send('Usage: `df!extract <User#0000>`')
 
     @commands.command()
     async def generate(self, ctx, *, subject: discord.Member = None):
         """Runs all of the process steps needed to generate a model"""
         if subject:
-            db_queries.register_subject(self.session, ctx, subject)
-            await ctx.send('Starting task 1 of 4...')
-            await ctx.send(
-                  f'Extracting chat history for {subject.name}... (This could take a few minutes).'
-            )
-            self.bot.loop.create_task(
-                extract_util.extract_chat_history(ctx, subject, self.bot)
-            )
+            if ctx.author.id in self.extraction_task_users:
+                await ctx.send('Please wait until your other extraction task is complete.')
+            else:
+                db_queries.register_subject(self.session, ctx, subject)
+                await ctx.send('Starting task 1 of 4...')
+                await ctx.send(
+                    f'Extracting chat history for {subject.name}...'
+                )
+                self.bot.loop.create_task(
+                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                )
         else:
-            await ctx.send("'Usage: `df!extract <User#0000>`'")
+            await ctx.send('Usage: `df!generate <User#0000>`')
 
     @commands.command()
     async def stats(self, ctx):
@@ -85,6 +92,7 @@ class DeepFakeBot(commands.Cog):
         result = 'Here are some stats about me:\n```'
         for k in stats.keys():
             result += f'{k}: {stats[k]}\n'
+        result += f'Extraction tasks in progress: {len(self.extraction_task_users)}'
         result += '```'
         await ctx.send(result)
 
