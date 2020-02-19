@@ -115,7 +115,7 @@ async def get_latest_dataset(session, ctx, user_mention):
 
     try:
         data_set = result
-        if (dt.datetime.utcnow() - data_set.time_collected).days < 1:
+        if (dt.datetime.utcnow() - data_set.time_collected).days < 30:
             return data_set.data_uid
         else:
             await ctx.message.channel.send(
@@ -274,7 +274,7 @@ async def get_latest_markov_model(session, ctx, user_mention):
 
     try:
         markov_model = result
-        if (dt.datetime.utcnow() - markov_model.time_collected).days < 1:
+        if (dt.datetime.utcnow() - markov_model.time_collected).days < 30:
             return markov_model.model_uid
         else:
             await ctx.message.channel.send(
