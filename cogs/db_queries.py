@@ -42,7 +42,7 @@ def statistics(session):
     }
 
 
-def register_trainer(session, ctx):
+async def register_trainer(session, ctx):
     """Registers bot users"""
     id_to_check = int(ctx.message.author.id)
     result = session.query(Trainer) \
@@ -58,6 +58,9 @@ def register_trainer(session, ctx):
         )
         session.add(new_user)
         session.commit()
+        await ctx.author.send('Thank you for using me! You\'ve taken the first step towards creating a copy of one or more '
+                        'of your friends. I recommend having a look at my documentation when you get a chance :'
+                        'https://deepfake-bot.readthedocs.io/en/latest/')
 
 
 def register_subject(session, ctx, subject: discord.member):

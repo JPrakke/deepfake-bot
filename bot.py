@@ -33,7 +33,7 @@ class DeepFakeBot(commands.Cog):
             return False
 
         self.session = connection_manager.session
-        db_queries.register_trainer(self.session, ctx)
+        await db_queries.register_trainer(self.session, ctx)
         return True
 
     @commands.Cog.listener()
