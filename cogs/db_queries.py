@@ -58,9 +58,9 @@ async def register_trainer(session, ctx):
         )
         session.add(new_user)
         session.commit()
-        await ctx.author.send('Thank you for using me! You\'ve taken the first step towards creating a copy of one or more '
-                        'of your friends. I recommend having a look at my documentation when you get a chance :'
-                        'https://deepfake-bot.readthedocs.io/en/latest/')
+        await ctx.author.send('Thank you for using me! You\'ve taken the first step towards creating a copy of one or '
+                              'more of your friends. I recommend having a look at my documentation when you get a '
+                              'chance : https://deepfake-bot.readthedocs.io/en/latest/')
 
 
 def register_subject(session, ctx, subject: discord.member):
@@ -70,13 +70,15 @@ def register_subject(session, ctx, subject: discord.member):
 
     result = session.query(Subject) \
                     .filter(Subject.discord_id == user_id_to_check,
-                            Subject.server_id == server_id_to_check) \
+                            Subject.server_id == server_id_to_check,
+                            Subject.trainer_id == int(ctx.message.author.id)) \
                     .all()
 
     # If no record exists, add one.
     if len(result) == 0:
         new_user = Subject(
             discord_id=int(subject.id),
+            trainer_id=int(ctx.message.author.id),
             subject_name=f'{subject.name}#{subject.discriminator}',
             server_id=int(ctx.message.guild.id),
             server_name=ctx.message.guild.name
@@ -89,7 +91,8 @@ def create_data_set(session, ctx, user_mention, uid):
     """Adds a record for when a data set is created"""
     subject_id = session.query(Subject) \
                         .filter(Subject.discord_id == int(user_mention.id),
-                                Subject.server_id == int(ctx.message.guild.id))\
+                                Subject.server_id == int(ctx.message.guild.id),
+                                Subject.trainer_id == int(ctx.message.author.id))\
                         .first().id
 
     new_data_set = DataSet(
@@ -106,7 +109,8 @@ async def get_latest_dataset(session, ctx, user_mention):
     result = session.query(DataSet) \
                     .join(Subject) \
                     .filter(Subject.discord_id == int(user_mention.id),
-                            Subject.server_id == int(ctx.message.guild.id))\
+                            Subject.server_id == int(ctx.message.guild.id),
+                            Subject.trainer_id == int(ctx.message.author.id))\
                     .order_by(DataSet.id.desc()).first()
 
     try:
@@ -115,9 +119,8 @@ async def get_latest_dataset(session, ctx, user_mention):
             return data_set.data_uid
         else:
             await ctx.message.channel.send(
-                  f'The only data set I found on this server for {user_mention.name} is expired.')
+                  f'The only data set I found that belongs to you for {user_mention.name} is expired.')
             await ctx.message.channel.send(f'Try running `df!extract` again.')
-            # TODO: Add a link to data retention policy once it's done
             return False
     except (TypeError, AttributeError):
         await ctx.message.channel.send(
@@ -133,12 +136,14 @@ def add_a_filter(session, ctx, subject: discord.member, word_to_add):
               .join(Subject) \
               .filter(TextFilter.word == word_to_add,
                       Subject.server_id == int(ctx.message.guild.id),
-                      Subject.discord_id == int(subject.id)) \
+                      Subject.discord_id == int(subject.id),
+                      Subject.trainer_id == int(ctx.message.author.id)) \
               .count() == 0:
         filter_record = TextFilter(
             subject_id=session.query(Subject)
                               .filter(Subject.server_id == int(ctx.message.guild.id),
-                                      Subject.discord_id == int(subject.id))
+                                      Subject.discord_id == int(subject.id),
+                                      Subject.trainer_id == int(ctx.message.author.id))
                               .first().id,
             word=word_to_add
         )
@@ -153,7 +158,8 @@ def remove_a_filter(session, ctx, subject: discord.member, word_to_remove):
                             .join(Subject) \
                             .filter(TextFilter.word == word_to_remove,
                                     Subject.server_id == int(ctx.message.guild.id),
-                                    Subject.discord_id == int(subject.id)) \
+                                    Subject.discord_id == int(subject.id),
+                                    Subject.trainer_id == int(ctx.message.author.id)) \
                             .all()
 
     if len(filter_records) > 0:
@@ -170,7 +176,8 @@ def clear_filters(session, ctx, subject: discord.member):
     filter_records = session.query(TextFilter) \
                             .join(Subject) \
                             .filter(Subject.server_id == int(ctx.message.guild.id),
-                                    Subject.discord_id == int(subject.id)) \
+                                    Subject.discord_id == int(subject.id),
+                                    Subject.trainer_id == int(ctx.message.author.id)) \
                             .all()
 
     [session.delete(r) for r in filter_records]
@@ -183,7 +190,8 @@ def find_filters(session, ctx, subject: discord.member):
     filter_records = session.query(TextFilter) \
                             .join(Subject) \
                             .filter(Subject.server_id == int(ctx.message.guild.id),
-                                    Subject.discord_id == int(subject.id)) \
+                                    Subject.discord_id == int(subject.id),
+                                    Subject.trainer_id == int(ctx.message.author.id)) \
                             .all()
 
     return [res.word for res in filter_records]
@@ -195,7 +203,8 @@ def get_markov_settings(session, ctx, subject: discord.member):
     markov_records = session.query(MarkovSettings) \
                             .join(Subject) \
                             .filter(Subject.server_id == int(ctx.message.guild.id),
-                                    Subject.discord_id == int(subject.id)) \
+                                    Subject.discord_id == int(subject.id),
+                                    Subject.trainer_id == int(ctx.message.author.id)) \
                             .all()
 
     if len(markov_records) == 1:
@@ -210,7 +219,8 @@ def update_markov_settings(session, ctx, subject: discord.member, new_state_size
     markov_records = session.query(MarkovSettings) \
                             .join(Subject) \
                             .filter(Subject.server_id == int(ctx.message.guild.id),
-                                    Subject.discord_id == int(subject.id)) \
+                                    Subject.discord_id == int(subject.id),
+                                    Subject.trainer_id == int(ctx.message.author.id)) \
                             .all()
 
     if len(markov_records) == 1:
@@ -227,7 +237,8 @@ def update_markov_settings(session, ctx, subject: discord.member, new_state_size
         new_record = MarkovSettings(
             subject_id=session.query(Subject)
                               .filter(Subject.server_id == int(ctx.message.guild.id),
-                                      Subject.discord_id == int(subject.id))
+                                      Subject.discord_id == int(subject.id),
+                                      Subject.trainer_id == int(ctx.message.author.id))
                               .first().id,
             state_size=new_state_size,
             newline=new_newline
@@ -257,7 +268,8 @@ async def get_latest_markov_model(session, ctx, user_mention):
                     .join(DataSet) \
                     .join(Subject) \
                     .filter(Subject.discord_id == int(user_mention.id),
-                            Subject.server_id == int(ctx.message.guild.id))\
+                            Subject.server_id == int(ctx.message.guild.id),
+                            Subject.trainer_id == int(ctx.message.author.id))\
                     .order_by(MarkovModel.id.desc()).first()
 
     try:
@@ -266,13 +278,13 @@ async def get_latest_markov_model(session, ctx, user_mention):
             return markov_model.model_uid
         else:
             await ctx.message.channel.send(
-                  f'The only model I found on this server for {user_mention.name} is expired.')
+                  f'The only model I found that belongs to you for {user_mention.name} is expired.')
             await ctx.message.channel.send(f'Try running `df!markovify generate` again.')
-            # TODO: Add a link to data retention policy once it's done
             return False
     except (TypeError, AttributeError):
         await ctx.message.channel.send(
-              f'I couldn\'t find a model for {user_mention.name}. Try running `df!markovify generate` first.')
+              f'I couldn\'t find a model that belongs to you for {user_mention.name}. Try running '
+              '`df!markovify generate` first.')
         return False
 
 

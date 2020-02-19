@@ -19,6 +19,7 @@ class Subject(Base):
     __tablename__ = 'subjects'
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger)
+    trainer_id = Column(BigInteger)
     subject_name = Column(String(255))
     server_id = Column(BigInteger)
     server_name = Column(String(255))
