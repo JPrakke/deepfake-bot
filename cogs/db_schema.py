@@ -12,6 +12,7 @@ class Trainer(Base):
     discord_id = Column(BigInteger, unique=True)
     user_name = Column(String(255))
     time_registered = Column(DateTime)
+    subscribed = Column(Boolean)
 
 
 class Subject(Base):

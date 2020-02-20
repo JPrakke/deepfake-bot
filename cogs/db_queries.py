@@ -54,13 +54,32 @@ async def register_trainer(session, ctx):
         new_user = Trainer(
             discord_id=int(ctx.message.author.id),
             user_name=f'{ctx.message.author.name}#{ctx.message.author.discriminator}',
-            time_registered=dt.datetime.utcnow()
+            time_registered=dt.datetime.utcnow(),
+            subscribed=True
         )
         session.add(new_user)
         session.commit()
         await ctx.author.send('Thank you for using me! You\'ve taken the first step towards creating a copy of one or '
                               'more of your friends. I recommend having a look at my documentation when you get a '
                               'chance: https://deepfake-bot.readthedocs.io/en/latest/')
+
+
+def get_all_registered_users(session):
+    """Returns all the Discord id's of registered users"""
+    result = session.query(Trainer.discord_id) \
+                    .filter(Trainer.subscribed) \
+                    .all()
+    return result
+
+
+def change_subscription_status(session, ctx, new_status: Boolean):
+    """Subscribe or unsubscribe a user"""
+    user = session.query(Trainer) \
+                  .filter(Trainer.discord_id == ctx.author.id) \
+                  .first()
+    user.subscribed = new_status
+    session.commit()
+    return True
 
 
 def register_subject(session, ctx, subject: discord.member):

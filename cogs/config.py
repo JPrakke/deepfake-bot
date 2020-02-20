@@ -17,3 +17,4 @@ database_url = os.environ['DEEPFAKE_DATABASE_STRING']
 unique_delimiter = '11a4b96a-ae8a-45f9-a4db-487cda63f5bd'
 
 report_issue_url = 'https://github.com/rustygentile/deepfake-bot/issues/new'
+deepfake_owner_id = 551864836917821490
