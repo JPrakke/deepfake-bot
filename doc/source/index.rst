@@ -22,4 +22,6 @@ Table of Contents
    self-deployments
    hosted-deployments
    commands
+   interacting-with-your-bot
    privacy
+   changelog

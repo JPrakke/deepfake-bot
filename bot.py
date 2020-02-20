@@ -118,7 +118,7 @@ class DeepFakeBot(commands.Cog):
         await ctx.send(result)
 
 
-app = commands.Bot(command_prefix='d!')
+app = commands.Bot(command_prefix='df!')
 app.add_cog(ConnectionManager(app))
 app.add_cog(DeepFakeBot(app))
 app.add_cog(FilterCommands(app))
