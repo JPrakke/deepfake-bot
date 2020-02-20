@@ -60,7 +60,7 @@ async def register_trainer(session, ctx):
         session.commit()
         await ctx.author.send('Thank you for using me! You\'ve taken the first step towards creating a copy of one or '
                               'more of your friends. I recommend having a look at my documentation when you get a '
-                              'chance : https://deepfake-bot.readthedocs.io/en/latest/')
+                              'chance: https://deepfake-bot.readthedocs.io/en/latest/')
 
 
 def register_subject(session, ctx, subject: discord.member):
@@ -149,6 +149,37 @@ def add_a_filter(session, ctx, subject: discord.member, word_to_add):
         )
         session.add(filter_record)
         session.commit()
+
+
+def add_multiple_filters(session, ctx, subject: discord.member, words_to_add):
+    """Adds text filters for a given subject using a single com"""
+    register_subject(session, ctx, subject)
+
+    # First check which words really need to be added
+    words_to_really_add = []
+    for word in words_to_add:
+        if session.query(TextFilter) \
+              .join(Subject) \
+              .filter(TextFilter.word == word,
+                      Subject.server_id == int(ctx.message.guild.id),
+                      Subject.discord_id == int(subject.id),
+                      Subject.trainer_id == int(ctx.message.author.id)) \
+              .count() == 0:
+            words_to_really_add.append(word)
+
+    for word in words_to_really_add:
+        filter_record = TextFilter(
+            subject_id=session.query(Subject)
+                              .filter(Subject.server_id == int(ctx.message.guild.id),
+                                      Subject.discord_id == int(subject.id),
+                                      Subject.trainer_id == int(ctx.message.author.id))
+                              .first().id,
+            word=word
+        )
+        session.add(filter_record)
+
+    session.commit()
+    return words_to_really_add
 
 
 def remove_a_filter(session, ctx, subject: discord.member, word_to_remove):

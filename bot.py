@@ -3,7 +3,7 @@ import logging
 import asyncio
 import discord
 from discord.ext import commands
-from cogs import extract_util
+from cogs import extract_task
 from cogs import db_queries
 from cogs.db_connection import ConnectionManager
 from cogs.db_connection import DeepFakeBotConnectionError
@@ -62,7 +62,7 @@ class DeepFakeBot(commands.Cog):
                     f'Extracting chat history for {subject.name}...'
                 )
                 self.bot.loop.create_task(
-                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                    extract_task.extract_chat_history(ctx, subject, self.bot)
                 )
         else:
             await ctx.send('Usage: `df!extract <User#0000>`')
@@ -80,7 +80,7 @@ class DeepFakeBot(commands.Cog):
                     f'Extracting chat history for {subject.name}...'
                 )
                 self.bot.loop.create_task(
-                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                    extract_task.extract_chat_history(ctx, subject, self.bot)
                 )
         else:
             await ctx.send('Usage: `df!generate <User#0000>`')
@@ -94,6 +94,7 @@ class DeepFakeBot(commands.Cog):
             result += f'{k}: {stats[k]}\n'
         result += f'Extraction tasks in progress: {len(self.extraction_task_users)}'
         result += '```'
+
         await ctx.send(result)
 
 

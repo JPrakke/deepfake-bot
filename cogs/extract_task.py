@@ -1,39 +1,19 @@
 import uuid
 import gzip
-import boto3
 import datetime as dt
 from cogs import db_queries
-from cogs.config import *
 import discord
 import logging
-import re
-from discord.utils import get
 import asyncio
+from cogs.extract_task_functions import *
 
 # Need to limit the number of messages for larger servers
 MAX_CHANNEL_MESSAGES = 10**5
 
+# ...and the number of automatically added filters
+MAX_AUTO_FILTERS = 32
+
 logger = logging.getLogger(__name__)
-discord_id_re = re.compile('<@.?[0-9]*?>')
-
-
-def mentions_to_names(s, bot):
-    """Converts the text of a mention to the format @<User#0000>"""
-    matches = discord_id_re.findall(s)
-    for mention in matches:
-        discord_id = mention.replace('<@', '') \
-            .replace('>', '') \
-            .replace('i', '') \
-            .replace('!', '') \
-            .replace('&', '')
-
-        user = get(bot.get_all_members(), id=int(discord_id))
-        if user:
-            s = s.replace(mention, f'@{user.name}#{user.discriminator}')
-        else:
-            s = s.replace(mention, '@UNKNOWN_USER')
-
-    return s
 
 
 async def extract_chat_history(ctx, subject, bot):
@@ -43,8 +23,12 @@ async def extract_chat_history(ctx, subject, bot):
     logger.info(f'Extracting chat history for {subject.name}...')
     start_time = dt.datetime.now()
 
-    # Prevent the user from have more than one extraction task run at once
-    bot.get_cog('DeepFakeBot').extraction_task_users.append(ctx.author.id)
+    # Prevent the user from having more than one extraction task running at once
+    def block_extract_task():
+        bot.get_cog('DeepFakeBot').extraction_task_users.append(ctx.author.id)
+
+    def release_extract_task():
+        bot.get_cog('DeepFakeBot').extraction_task_users.remove(ctx.author.id)
 
     # Setup file names
     extraction_id = str(uuid.uuid4().hex)
@@ -52,7 +36,8 @@ async def extract_chat_history(ctx, subject, bot):
     channel_file_name = f'./tmp/{extraction_id}-channels.csv.gz'
 
     # Setup initial parameters for our loop
-    timestamps, channel_names, accessible_channels, unreadable_channels, message_counter = [], [], [], [], 0
+    timestamps, channel_names, accessible_channels, unreadable_channels, message_counter, auto_filters = \
+        [], [], [], [], 0, []
 
     # Determine the number of text channels and which ones the bot can read
     readable_channels = list(filter(lambda x: hasattr(x, 'history'), ctx.message.guild.channels))
@@ -74,6 +59,8 @@ async def extract_chat_history(ctx, subject, bot):
         ctx.send(msg)
     )
 
+    block_extract_task()
+
     # Open a text file and start looping through each channel messages
     with gzip.open(text_file_name, 'wb') as f:
         for channel in accessible_channels:
@@ -86,20 +73,33 @@ async def extract_chat_history(ctx, subject, bot):
                     channel_counter += 1
                     try:
                         if message.author == subject:
+                            # Increment counters
                             author_counter += 1
                             message_counter += 1
-                            result = str(mentions_to_names(message.content, bot) + unique_delimiter)
+
+                            # Process text
+                            result = str(mentions_to_names(message.content, bot))
+                            prefix_check = likely_a_bot_command(result)
+                            if prefix_check: auto_filters.append(prefix_check)
+                            result += unique_delimiter
+
+                            # Add to channels data
                             timestamps.append(int(message.created_at.timestamp()))
                             channel_names.append(channel.name)
+
+                            # Write to flat text file
                             f.write(result.encode())
+
                     except Exception as e:
                         logger.error(str(e))
+                        release_extract_task()
 
                 end_time_channel = dt.datetime.now()
                 logger.info(f'{channel.name} processed in {end_time_channel - start_time_channel} seconds')
 
             except Exception as e:
                 logger.error(str(e))
+                release_extract_task()
 
             if author_counter > 0:
                 msg = f'Found {author_counter} of {channel_counter} messages written by '\
@@ -108,6 +108,9 @@ async def extract_chat_history(ctx, subject, bot):
                 bot.loop.create_task(
                     ctx.send(msg)
                 )
+
+    # Allow the user to execute this command again
+    release_extract_task()
 
     with gzip.open(channel_file_name, 'wb') as f:
         f.write('timestamp,channel\n'.encode())
@@ -126,13 +129,22 @@ async def extract_chat_history(ctx, subject, bot):
     end_time = dt.datetime.now()
     logger.info(f'Files uploaded to S3: {extraction_id}. Time elapsed = {end_time - start_time}')
 
-    # Add to database
+    # Add data set to database
     session = bot.get_cog('ConnectionManager').session
     db_queries.create_data_set(session, ctx, subject, extraction_id)
+
+    # Add auto_filters to database
+    filters = find_common_prefixes(auto_filters)[:MAX_AUTO_FILTERS]
+    filters_added = db_queries.add_multiple_filters(session, ctx, subject, filters)
 
     # Bot replies
     await bot.wait_until_ready()
     await asyncio.sleep(1)
+
+    if filters_added:
+        filter_phrase = '\n'.join(filters_added)
+        await ctx.send(f'Added the following filters for {subject.name}:\n```{filter_phrase}```')
+
     await ctx.send(f'Extraction complete for {subject}. Found {message_counter} total messages:',
                    files=[discord.File(text_file_name), discord.File(channel_file_name)])
 
@@ -145,13 +157,13 @@ async def extract_chat_history(ctx, subject, bot):
                            'channels that I do not have permission to read.')
         chs = ', '.join(unreadable_channels)
         logger.info(f'Unreadable channels: {chs}')
+    
+    await ctx.message.author.send(f'Finished your extraction task! See also, my message in '
+                                  f'`#{ctx.message.channel.name}` on `{ctx.message.guild.name}` for more information.')
 
     # Disk cleanup
     os.remove(text_file_name)
     os.remove(channel_file_name)
-
-    # Allow the user to execute this command again
-    bot.get_cog('DeepFakeBot').extraction_task_users.remove(ctx.author.id)
 
     if ctx.invoked_with == 'generate':
         # Start the next step in the process...
@@ -160,11 +172,3 @@ async def extract_chat_history(ctx, subject, bot):
         plots_cog = bot.get_cog('PlotCommands')
         await ctx.send('Activity plot request submitted...')
         await plots_cog.process_activity(ctx, subject, extraction_id)
-
-
-def upload_to_s3(file_name):
-    s3 = boto3.resource('s3',
-                        aws_access_key_id=aws_access_key_id,
-                        aws_secret_access_key=aws_secret_access_key)
-
-    s3.Object(aws_s3_bucket_prefix, f'{file_name}'.strip('./tmp/')).upload_file(f'{file_name}')
