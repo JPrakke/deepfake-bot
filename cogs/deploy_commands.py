@@ -61,7 +61,7 @@ class DeployCommands(commands.Cog):
                                 'new_conversation_min_wait': 60,
                                 'new_conversation_max_wait': 3600,
                                 'max_sentence_length': 500,
-                                "max_markov_chains": 100,
+                                'max_markov_chains': 100,
                                 'selection_algorithm': 'cosine_similarity',
                                 'quiet_mode': False,
                                 'avg_delay': 2,
@@ -71,7 +71,8 @@ class DeployCommands(commands.Cog):
                                 'std_dev_typing_speed': 10,
                                 'min_typing_speed': 40,
                                 'white_list_server_ids': [ctx.message.guild.id],
-                                'owner_id': ctx.message.author.id
+                                'owner_id': ctx.message.author.id,
+                                'bot_prefix': 'df?'
                                 }
 
             config_file_name = f'{model_uid}-config.json'

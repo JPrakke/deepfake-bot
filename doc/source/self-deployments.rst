@@ -18,9 +18,11 @@ Discord
 2. Change its icon to the avatar you received in a private message from running ``df!deploy self``.
 3. Copy the bot's token (not the application's client secret) and keep it somewhere safe.
 
-Also, make sure you download the files from Discord. You can edit the parameters in `*-config.json` but do not rename either file.
+Also, make sure you download the files from Discord. You may edit the parameters in `*-config.json` but do not rename either file.
 
 .. image:: https://deepfake-discord-bot-permanent.s3.us-east-1.amazonaws.com/model_artifacts.PNG
+
+.. tip:: Plexi Development users will need to do the following: 1) Change ``bot_prefix`` to something unique 2) Add the Plexi test server to ``white_list_server_ids`` 3) Change ``reply_probability`` to 0. 
 
 Github
 ``````

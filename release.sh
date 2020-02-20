@@ -27,8 +27,8 @@ rm -r deploy
 # RELEASE -- adds a tag. Then increments the patch number and commits it.
 
 MAJOR_VERSION=1 # <---to make a major or minor release these should be edited and committed
-MINOR_VERSION=1
-PATCH_VERSION=1
+MINOR_VERSION=2
+PATCH_VERSION=0
 
 echo "Tagging in git..."
 git tag v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION

@@ -1,9 +1,7 @@
-import os
 import logging
-import asyncio
 import discord
 from discord.ext import commands
-from cogs import extract_util
+from cogs import extract_task
 from cogs import db_queries
 from cogs.db_connection import ConnectionManager
 from cogs.db_connection import DeepFakeBotConnectionError
@@ -11,6 +9,7 @@ from cogs.filter_commands import FilterCommands
 from cogs.plot_commands import PlotCommands
 from cogs.model_commands import ModelCommands
 from cogs.deploy_commands import DeployCommands
+from cogs.config import *
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class DeepFakeBot(commands.Cog):
             return False
 
         self.session = connection_manager.session
-        db_queries.register_trainer(self.session, ctx)
+        await db_queries.register_trainer(self.session, ctx)
         return True
 
     @commands.Cog.listener()
@@ -43,12 +42,33 @@ class DeepFakeBot(commands.Cog):
         logger.info(self.bot.user.id)
         logger.info('------')
 
+    @commands.command(hidden=True)
+    async def newsletter(self, ctx, msg):
+        """Sends a DM to all registered users"""
+        if ctx.author.id != deepfake_owner_id:
+            await ctx.send('You don\'t have permission to use that command.')
+        else:
+            logger.info(msg)
+            registered_users = db_queries.get_all_registered_users(self.session)
+            for u in registered_users:
+                user = discord.utils.get(self.bot.get_all_members(), id=u.discord_id)
+                if user:
+                    await user.send(msg + '\nIf you would no longer like to receive these messages, '
+                                    'reply with `df!unsubscribe`.')
+
     @commands.command()
-    async def repeat(self, ctx, msg):
-        """Function for testing. Bot will repeat the message in the command."""
-        logger.info(msg)
-        channel = ctx.message.channel
-        await channel.send(msg)
+    async def unsubscribe(self, ctx):
+        """Removes you from newsletter list"""
+        success = db_queries.change_subscription_status(self.session, ctx, False)
+        if success:
+            await ctx.send('You will no longer receive newsletter messages.')
+
+    @commands.command()
+    async def subscribe(self, ctx):
+        """Adds you from newsletter list"""
+        success = db_queries.change_subscription_status(self.session, ctx, True)
+        if success:
+            await ctx.send('You will now receive newsletter messages.')
 
     @commands.command()
     async def extract(self, ctx, *, subject: discord.Member = None):
@@ -62,7 +82,7 @@ class DeepFakeBot(commands.Cog):
                     f'Extracting chat history for {subject.name}...'
                 )
                 self.bot.loop.create_task(
-                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                    extract_task.extract_chat_history(ctx, subject, self.bot)
                 )
         else:
             await ctx.send('Usage: `df!extract <User#0000>`')
@@ -80,7 +100,7 @@ class DeepFakeBot(commands.Cog):
                     f'Extracting chat history for {subject.name}...'
                 )
                 self.bot.loop.create_task(
-                    extract_util.extract_chat_history(ctx, subject, self.bot)
+                    extract_task.extract_chat_history(ctx, subject, self.bot)
                 )
         else:
             await ctx.send('Usage: `df!generate <User#0000>`')
@@ -94,6 +114,7 @@ class DeepFakeBot(commands.Cog):
             result += f'{k}: {stats[k]}\n'
         result += f'Extraction tasks in progress: {len(self.extraction_task_users)}'
         result += '```'
+
         await ctx.send(result)
 
 

@@ -13,7 +13,7 @@ contributions. For the bot to function, however, it needs to read your servers' 
 
 What sort of information do you store?
 ``````````````````````````````````````
-Messages authored by your model subjects are uploaded as flat text files into a private S3 bucket with a policy where objects expire every 24 hours. 
+Messages authored by your model subjects are uploaded as flat text files into a private S3 bucket with a policy where objects expire every 30 days. 
 I also permanently store some information in a SQL database. For instance: your discord id and user name, your discord server id, any text 
 filters you have applied. You can view the database schema `here <https://github.com/rustygentile/deepfake-bot/blob/master/cogs/db_schema.py>`_.
 
