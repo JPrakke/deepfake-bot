@@ -56,8 +56,8 @@ increment() {
     local replace="PATCH_VERSION=$NEW_PATCH_VERSION"
     sed -i "0,/${search}/s/${search}/${replace}/" release.sh
 
-    local replace="version = '$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION'"
-    local search="version = 'DEVELOPMENT'"
+    local search="version = '$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION'"
+    local replace="version = 'DEVELOPMENT'"
     sed -i "0,/${search}/s/${search}/${replace}/" ./cogs/config.py
 }
 
