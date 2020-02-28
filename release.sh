@@ -77,3 +77,4 @@ git push --all
 git push --all --tags
 
 echo "Release complete!"
+git checkout master
