@@ -4,8 +4,8 @@ Change Log
 Releases
 --------
 
-1.2.0
-`````
+1.2.0 - (not yet released)
+``````````````````````````
 * Added a message to new users with a link to documentation
 * Training subjects are now linked to trainers - i.e. other users can't mess with your filters or model settings
 * Changed S3 expiration time to 30 days
