@@ -32,6 +32,7 @@ def statistics(session):
     count_models = session.query(MarkovModel.id).count()
     count_deployments = session.query(Deployment.id).count()
     return {
+        'Version': version,
         'Registered Users': count_users,
         'Model Subjects': count_subjects,
         'Servers': count_servers,

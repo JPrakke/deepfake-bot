@@ -72,7 +72,8 @@ class DeployCommands(commands.Cog):
                                 'min_typing_speed': 40,
                                 'white_list_server_ids': [ctx.message.guild.id],
                                 'owner_id': ctx.message.author.id,
-                                'bot_prefix': 'df?'
+                                'bot_prefix': 'df?',
+                                'version': cogs.config.version
                                 }
 
             config_file_name = f'{model_uid}-config.json'
