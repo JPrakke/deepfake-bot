@@ -68,8 +68,12 @@ git add release.sh
 git add ./cogs/config.py
 git commit -m "RELEASE SCRIPT: preparing for next release"
 
+echo "Tagging self-deployment branch..."
+git checkout self-deployment
+git tag v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION
+
 echo "Pushing..."
-git push
-git push --tags
+git push --all
+git push --all --tags
 
 echo "Release complete!"
