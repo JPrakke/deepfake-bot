@@ -65,6 +65,7 @@ increment
 
 echo "Committing..."
 git add release.sh
+git add ./cogs/config.py
 git commit -m "RELEASE SCRIPT: preparing for next release"
 
 echo "Pushing..."
