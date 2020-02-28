@@ -74,7 +74,7 @@ git tag self-deployment-v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION
 
 echo "Pushing..."
 git push --all
-git push --all --tags
+git push origin --tags
 
 echo "Release complete!"
 git checkout master
