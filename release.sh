@@ -70,7 +70,7 @@ git commit -m "RELEASE SCRIPT: preparing for next release"
 
 echo "Tagging self-deployment branch..."
 git checkout self-deployment
-git tag v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION
+git tag self-deployment-v$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION
 
 echo "Pushing..."
 git push --all
