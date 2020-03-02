@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DeployCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.parent_cog = self.bot.get_cog('DeepFakeBot')
+        self.parent_cog = self.bot.get_cog('CoreCommands')
         self.session = self.parent_cog.session
         self.s3 = s3fs.S3FileSystem(key=cogs.config.aws_access_key_id,
                                     secret=cogs.config.aws_secret_access_key)

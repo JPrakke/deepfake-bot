@@ -6,7 +6,7 @@ from cogs import db_queries
 class FilterCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.parent_cog = self.bot.get_cog('DeepFakeBot')
+        self.parent_cog = self.bot.get_cog('CoreCommands')
         self.session = self.parent_cog.session
 
     async def cog_check(self, ctx):

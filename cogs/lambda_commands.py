@@ -17,7 +17,7 @@ class LambdaCommand(commands.Cog):
     """Base class for invoking AWS Lambda funtions."""
     def __init__(self, bot):
         self.bot = bot
-        self.parent_cog = self.bot.get_cog('DeepFakeBot')
+        self.parent_cog = self.bot.get_cog('CoreCommands')
         self.session = self.parent_cog.session
         self.lambda_client = boto3.client('lambda', region_name='us-east-1')
         self.s3_client = boto3.client('s3')

@@ -25,10 +25,10 @@ async def extract_chat_history(ctx, subject, bot):
 
     # Prevent the user from having more than one extraction task running at once
     def block_extract_task():
-        bot.get_cog('DeepFakeBot').extraction_task_users.append(ctx.author.id)
+        bot.get_cog('CoreCommands').extraction_task_users.append(ctx.author.id)
 
     def release_extract_task():
-        bot.get_cog('DeepFakeBot').extraction_task_users.remove(ctx.author.id)
+        bot.get_cog('CoreCommands').extraction_task_users.remove(ctx.author.id)
 
     # Setup file names
     extraction_id = str(uuid.uuid4().hex)
