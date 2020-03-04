@@ -21,7 +21,7 @@ Parameters
 * ``max_sentence_length`` - Maximum number of characters in your bot's replies.
 * ``max_markov_chains`` - Maximum number of Markov chains to attempt to generate per candiate reply. 
 * ``selection_algorithm`` - Can be 'cosine_similarity' or 'match_words'. When replying, this is how your bot will select the best response from its Markov chain candiates.
-* ``quiet_mode`` - Removes ``@``s from replies.
+* ``quiet_mode`` - Removes ``@`` s from replies.
 * ``avg_delay`` - Average time before starting to type a response.
 * ``std_dev_delay`` - Variance in time before starting to type a response.
 * ``min_delay`` - Minimum time before starting to type a response.
