@@ -21,6 +21,7 @@ class FilterCommands(commands.Cog):
             await ctx.send('')
 
     @filter.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def add(self, ctx, subject: discord.Member, word_to_add):
         if len(word_to_add) < 256:
             db_queries.add_a_filter(self.session, ctx, subject, word_to_add)
@@ -29,6 +30,7 @@ class FilterCommands(commands.Cog):
             await ctx.send('Filters need to be 255 characters or less.')
 
     @filter.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def remove(self, ctx, subject: discord.Member, word_to_drop):
         found_word = db_queries.remove_a_filter(self.session, ctx, subject, word_to_drop)
         if found_word:
@@ -37,6 +39,7 @@ class FilterCommands(commands.Cog):
             await ctx.send(f'Text filter `{word_to_drop}` not found for `{subject.name}` on this server.')
 
     @filter.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def show(self, ctx, subject: discord.Member):
         found_filters = db_queries.find_filters(self.session, ctx, subject)
         if len(found_filters) > 0:
@@ -46,6 +49,7 @@ class FilterCommands(commands.Cog):
             await ctx.send(f'No filters applied to {subject.name} for this server.')
 
     @filter.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def clear_all(self, ctx, subject: discord.Member):
         db_queries.clear_filters(self.session, ctx, subject)
         await ctx.send(f'Text filters removed for `{subject.name}` on this server.')

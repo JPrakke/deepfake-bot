@@ -109,6 +109,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
             await markov_cog.process_markovify(ctx, subject, data_uid, filters, state_size, newline)
 
     @commands.command()
+    @commands.cooldown(10, 300, type=commands.BucketType.user)
     async def wordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image if a data set exists for the mentioned subject"""
         if subject:
@@ -121,6 +122,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
             await ctx.message.channel.send(f'Usage: `df!wordcloud User#0000`')
 
     @commands.command()
+    @commands.cooldown(10, 300, type=commands.BucketType.user)
     async def dirtywordcloud(self, ctx, *, subject: discord.Member):
         """Uploads a wordcloud image of curse words if a dataset has been extracted for the mentioned subject"""
         if subject:
@@ -133,6 +135,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
             await ctx.send(f'Usage: `df!dirtywordcloud User#0000`')
 
     @commands.command()
+    @commands.cooldown(10, 300, type=commands.BucketType.user)
     async def activity(self, ctx, *, subject: discord.Member):
         """Uploads time series and pie charts image if a data set exists for the mentioned subject"""
         if subject:

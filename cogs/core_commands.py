@@ -52,7 +52,7 @@ class CoreCommands(commands.Cog):
                                     'reply with `df!unsubscribe`.')
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(2, 60, type=commands.BucketType.user)
     async def unsubscribe(self, ctx):
         """Removes you from newsletter list"""
         success = db_queries.change_subscription_status(self.session, ctx, False)
@@ -60,7 +60,7 @@ class CoreCommands(commands.Cog):
             await ctx.send('You will no longer receive newsletter messages.')
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(2, 60, type=commands.BucketType.user)
     async def subscribe(self, ctx):
         """Adds you from newsletter list"""
         success = db_queries.change_subscription_status(self.session, ctx, True)
@@ -68,7 +68,7 @@ class CoreCommands(commands.Cog):
             await ctx.send('You will now receive newsletter messages.')
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(5, 300, type=commands.BucketType.user)
     async def extract(self, ctx, *, subject: discord.Member = None):
         """Extracts chat history of a subject"""
         if subject:
@@ -86,7 +86,7 @@ class CoreCommands(commands.Cog):
             await ctx.send('Usage: `df!extract <User#0000>`')
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(5, 300, type=commands.BucketType.user)
     async def generate(self, ctx, *, subject: discord.Member = None):
         """Runs all of the process steps needed to generate a model"""
         if subject:
@@ -105,7 +105,7 @@ class CoreCommands(commands.Cog):
             await ctx.send('Usage: `df!generate <User#0000>`')
 
     @commands.command()
-    @commands.cooldown(1, 60, type=commands.BucketType.user)
+    @commands.cooldown(2, 60, type=commands.BucketType.user)
     async def stats(self, ctx):
         """Shares some stats with you"""
         stats = db_queries.statistics(self.session)

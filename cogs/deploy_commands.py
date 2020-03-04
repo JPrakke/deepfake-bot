@@ -48,6 +48,7 @@ class DeployCommands(commands.Cog):
         pass
 
     @deploy.command()
+    @commands.cooldown(10, 300, type=commands.BucketType.user)
     async def self(self, ctx, *, subject: discord.Member):
         model_uid = await db_queries.get_latest_markov_model(self.session, ctx, subject)
         if model_uid:

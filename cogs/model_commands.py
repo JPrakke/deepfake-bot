@@ -63,6 +63,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
         pass
 
     @markovify.command()
+    @commands.cooldown(5, 300, type=commands.BucketType.user)
     async def generate(self, ctx, *, subject: discord.Member):
         """Generates a markov chain model and sample responses in the style of your subject"""
         if subject:
@@ -76,12 +77,14 @@ class ModelCommands(lambda_commands.LambdaCommand):
             await ctx.message.channel.send(f'Usage: `df!markovify User#0000`')
 
     @markovify.group(name='newline')
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def newline(self, ctx):
         """Sets newline to on/off"""
         if ctx.invoked_subcommand is None:
             await ctx.send('Usage: `df!markovify newline <off/on> User#0000`')
 
     @newline.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def off(self, ctx, *, subject: discord.Member):
         if subject:
             state_size, _ = db_queries.get_markov_settings(self.session, ctx, subject)
@@ -91,6 +94,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             await ctx.send('Usage: `df!markovify newline off @User#0000`')
 
     @newline.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def on(self, ctx, *, subject: discord.Member):
         if subject:
             state_size, _ = db_queries.get_markov_settings(self.session, ctx, subject)
@@ -100,6 +104,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             await ctx.send('Usage: `df!markovify newline on @User#0000`')
 
     @markovify.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def state_size(self, ctx, subject: discord.Member, new_value: int):
         """Changes the state size. Default value is 3. Smaller values tend to generate more chaotic sentences."""
         old_value, newline = db_queries.get_markov_settings(self.session, ctx, subject)
@@ -107,6 +112,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
         await ctx.send(f'Markovify state size changed from {old_value} to {new_value} for {subject.name}')
 
     @markovify.command()
+    @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def settings(self, ctx, *, subject: discord.Member):
         """Displays the current markovify settings."""
         if subject:
