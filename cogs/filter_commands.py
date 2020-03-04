@@ -34,7 +34,7 @@ class FilterCommands(commands.Cog):
     async def remove(self, ctx, subject: discord.Member, word_to_drop):
         found_word = db_queries.remove_a_filter(self.session, ctx, subject, word_to_drop)
         if found_word:
-            await ctx.send(f'Removed text filter `{word_to_drop}` to `{subject.name}` for this server.')
+            await ctx.send(f'Removed text filter `{word_to_drop}` from `{subject.name}` for this server.')
         else:
             await ctx.send(f'Text filter `{word_to_drop}` not found for `{subject.name}` on this server.')
 

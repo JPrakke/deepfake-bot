@@ -4,13 +4,14 @@ Change Log
 Releases
 --------
 
-1.2.0 - (not yet released)
-``````````````````````````
+1.2.0
+`````
 * Added a message to new users with a link to documentation
 * Training subjects are now linked to trainers - i.e. other users can't mess with your filters or model settings
 * Changed S3 expiration time to 30 days
 * Added auto filters for extract task, added direct message when extracion task finishes
 * Added ``newsletter`` command
+* Added cooldowns to commands
 * Documentation updates: added interacting-with-your-bot page, added notes for Plexi users, added changelog
 * self-deployment branch: Renamed "generate" to "impersonate" for your bot
 * self-deployment branch: Config settings change also updates .json file in S3 

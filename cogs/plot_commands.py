@@ -119,7 +119,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Wordcloud request submitted...')
                 await self.process_wordcloud(ctx, subject, data_id, filters)
         else:
-            await ctx.message.channel.send(f'Usage: `df!wordcloud User#0000`')
+            await ctx.message.channel.send(f'Usage: `df!wordcloud <User#0000>`')
 
     @commands.command()
     @commands.cooldown(10, 300, type=commands.BucketType.user)
@@ -132,7 +132,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Wordcloud request submitted...')
                 await self.process_wordcloud(ctx, subject, data_id, filters, True)
         else:
-            await ctx.send(f'Usage: `df!dirtywordcloud User#0000`')
+            await ctx.send(f'Usage: `df!dirtywordcloud <User#0000>`')
 
     @commands.command()
     @commands.cooldown(10, 300, type=commands.BucketType.user)
@@ -144,4 +144,4 @@ class PlotCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Activity plot request submitted...')
                 await self.process_activity(ctx, subject, data_id)
         else:
-            await ctx.message.channel.send(f'Usage: `df!activity User#0000`')
+            await ctx.message.channel.send(f'Usage: `df!activity <User#0000>`')

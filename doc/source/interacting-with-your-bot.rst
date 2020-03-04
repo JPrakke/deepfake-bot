@@ -31,6 +31,7 @@ Parameters
 * ``white_list_server_ids`` - A list of servers where your bot can reply. By default, this is only the server on which it was trained.
 * ``owner_id`` - Your discord id.
 * ``bot_prefix`` - Command prefix for your bot. Make sure it is unique for the server(s) on which it runs.
+* ``version`` - Bot version used to generate your model artifacts.
 
 Commands
 --------

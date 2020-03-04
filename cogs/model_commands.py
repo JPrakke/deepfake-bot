@@ -74,14 +74,14 @@ class ModelCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Markovify request submitted...')
                 await self.process_markovify(ctx, subject, data_id, filters, state_size, newline)
         else:
-            await ctx.message.channel.send(f'Usage: `df!markovify User#0000`')
+            await ctx.message.channel.send(f'Usage: `df!markovify <User#0000>`')
 
     @markovify.group(name='newline')
     @commands.cooldown(10, 60, type=commands.BucketType.user)
     async def newline(self, ctx):
         """Sets newline to on/off"""
         if ctx.invoked_subcommand is None:
-            await ctx.send('Usage: `df!markovify newline <off/on> User#0000`')
+            await ctx.send('Usage: `df!markovify newline <off/on> <User#0000>`')
 
     @newline.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
@@ -91,7 +91,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             db_queries.update_markov_settings(self.session, ctx, subject, state_size, False)
             await ctx.send(f'markovify newline off for user {subject.name}')
         else:
-            await ctx.send('Usage: `df!markovify newline off @User#0000`')
+            await ctx.send('Usage: `df!markovify newline off <User#0000>`')
 
     @newline.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
@@ -101,7 +101,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             db_queries.update_markov_settings(self.session, ctx, subject, state_size, True)
             await ctx.send(f'markovify newline on for user {subject.name}')
         else:
-            await ctx.send('Usage: `df!markovify newline on @User#0000`')
+            await ctx.send('Usage: `df!markovify newline on <User#0000>`')
 
     @markovify.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
@@ -120,4 +120,4 @@ class ModelCommands(lambda_commands.LambdaCommand):
             await ctx.send(f'state size: {state_size}')
             await ctx.send(f'newline: {newline}')
         else:
-            await ctx.send('Usage: `df!markovify settings @User#0000`')
+            await ctx.send('Usage: `df!markovify settings <User#0000>`')

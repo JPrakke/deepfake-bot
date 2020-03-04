@@ -20,8 +20,7 @@ class DeepFakeBot(commands.Bot):
 
 
 def run_app():
-    # TODO: change this back to 'df!' after testing
-    app = DeepFakeBot(command_prefix='d!')
+    app = DeepFakeBot(command_prefix='df!')
     app.add_cog(ConnectionManager(app))
     app.add_cog(CoreCommands(app))
     app.add_cog(FilterCommands(app))
