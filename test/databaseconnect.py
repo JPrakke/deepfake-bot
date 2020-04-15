@@ -6,19 +6,32 @@ from sqlalchemy.orm import Session
 
 
 class DatabaseTests(unittest.TestCase):
-    def test_user_count(self):
+    def setup_connection(self):
         print('Connecting to database...')
-        engine = create_engine(cogs.config.database_url)
-        conn = engine.connect()
-        session = Session(engine)
+        self.engine = create_engine(cogs.config.database_url)
+        self.conn = self.engine.connect()
+        self.session = Session(self.engine)
 
-        number_of_users = len(session.query(Trainer).all())
+    def close_connection(self):
+        print('Closing connection...')
+        self.conn.close()
+        self.session.close()
+        self.engine.dispose()
 
-        conn.close()
-        session.close()
-        engine.dispose()
+    def test_user_count(self):
+        self.setup_connection()
 
+        number_of_users = len(self.session.query(Trainer).all())
         self.assertGreater(number_of_users, 0)
+
+        self.close_connection()
+
+    def test_bad_filter(self):
+        bad_filter = '@🅟🅞🅟~'
+
+        self.setup_connection()
+        self.session.query(Trainer).filter(Trainer.user_name == bad_filter).all()
+        self.close_connection()
 
 
 if __name__ == '__main__':

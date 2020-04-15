@@ -10,7 +10,7 @@ class Trainer(Base):
     __tablename__ = 'trainers'
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger, unique=True)
-    user_name = Column(String(255))
+    user_name = Column(String(255, collation='utf8_general_ci'))
     time_registered = Column(DateTime)
     subscribed = Column(Boolean)
 
@@ -21,9 +21,9 @@ class Subject(Base):
     id = Column(BigInteger, primary_key=True)
     discord_id = Column(BigInteger)
     trainer_id = Column(BigInteger)
-    subject_name = Column(String(255))
+    subject_name = Column(String(255, collation='utf8_general_ci'))
     server_id = Column(BigInteger)
-    server_name = Column(String(255))
+    server_name = Column(String(255, collation='utf8_general_ci'))
 
 
 class DataSet(Base):
@@ -35,7 +35,7 @@ class DataSet(Base):
 
     # data_uid is the file name stored in an S3 container. Expires after 24 hours.
     time_collected = Column(DateTime)
-    data_uid = Column(String(32), unique=True)
+    data_uid = Column(String(32, collation='utf8_general_ci'), unique=True)
 
 
 class TextFilter(Base):
@@ -44,7 +44,7 @@ class TextFilter(Base):
     id = Column(BigInteger, primary_key=True)
     subject_id = Column(BigInteger, ForeignKey('subjects.id'))
     subject_foreign_key = relationship('Subject', foreign_keys=[subject_id])
-    word = Column(String(255))
+    word = Column(String(255, collation='utf8_general_ci'))
 
 
 class MarkovSettings(Base):
@@ -96,7 +96,7 @@ class HostedDeployment(Base):
     deployment_foreign_key = relationship('Deployment', foreign_keys=[deployment_id])
 
     # Public IP of the instance running our deployment. Use '0.0.0.0' to indicate no instance is running this bot.
-    ip_address = Column(String(255))
+    ip_address = Column(String(255, collation='utf8_general_ci'))
 
     # Use this to enable/disable a hosted deployment
     active = Column(Boolean)
@@ -111,13 +111,4 @@ class HostedDeployment(Base):
     quiet_mode = Column(Boolean)
 
     # Discord credentials
-    bot_token = Column(String(255))
-
-
-class FavoriteWords(Base):
-    __tablename__ = 'favorite_words'
-    """List of words to which a hosted bot will always reply"""
-    id = Column(BigInteger, primary_key=True)
-    word = Column(String(255))
-    hosted_deployment_id = Column(BigInteger, ForeignKey('hosted_deployments.id'))
-    hosted_deployment_foreign_key = relationship('HostedDeployment', foreign_keys=[hosted_deployment_id])
+    bot_token = Column(String(255, collation='utf8_general_ci'))

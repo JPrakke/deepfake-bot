@@ -45,6 +45,11 @@ class BotCommandTest(unittest.TestCase):
         is_bot_command = likely_a_bot_command(s)
         self.assertFalse(is_bot_command)
 
+    def test_bad_filter(self):
+        s = '🅟🅞🅟~'
+        is_bot_command = likely_a_bot_command(s)
+        self.assertFalse(is_bot_command)
+
 
 if __name__ == '__main__':
     unittest.main()
