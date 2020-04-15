@@ -1,8 +1,8 @@
 # Creates a deploy.zip package that can be uploaded to EBS. Then versions and tags it in .git. This assumes any code changes have already been tested and committed.
 
 MAJOR_VERSION=1 # <---to make a major or minor release these should be edited and committed
-MINOR_VERSION=1
-PATCH_VERSION=8
+MINOR_VERSION=2
+PATCH_VERSION=1
 
 # BUILD -- Copy the version number from this file into config.py then zip the needed files.
 
