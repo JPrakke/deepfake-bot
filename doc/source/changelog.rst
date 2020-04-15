@@ -4,6 +4,11 @@ Change Log
 Releases
 --------
 
+1.2.1
+`````
+* Added ``impersonate`` command to DeepfakeBot
+* Bug fixes to ``extract`` and ``filter`` commands
+
 1.2.0
 `````
 * Added a message to new users with a link to documentation
