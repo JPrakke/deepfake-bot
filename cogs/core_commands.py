@@ -1,6 +1,11 @@
 import logging
 import discord
 from discord.ext import commands
+import boto3
+import asyncio
+import random
+import glob
+from cogs import config
 from cogs import extract_task
 from cogs import db_queries
 from cogs.db_connection import DeepFakeBotConnectionError
@@ -15,6 +20,21 @@ class CoreCommands(commands.Cog):
         self.session = None
         self.generate_subject = None
         self.extraction_task_users = []
+        self.servers_where_typing = []
+        self.s3_client = boto3.client('s3')
+
+        # Cleanup the /tmp folder
+        old_files = glob.glob('./tmp/*.*')
+        for file in old_files:
+            os.remove(file)
+
+        with open('./tmp/.gitkeep', 'w') as fp:
+            pass
+
+    async def delete_after_5_min(self, file_name):
+        """Background task for cleaning up a file after downloading"""
+        await asyncio.sleep(300)
+        os.remove(file_name)
 
     async def cog_check(self, ctx):
         """Refreshes the database connection and registers the user if not already done."""
@@ -62,7 +82,7 @@ class CoreCommands(commands.Cog):
     @commands.command()
     @commands.cooldown(2, 60, type=commands.BucketType.user)
     async def subscribe(self, ctx):
-        """Adds you from newsletter list"""
+        """Adds you to newsletter list"""
         success = db_queries.change_subscription_status(self.session, ctx, True)
         if success:
             await ctx.send('You will now receive newsletter messages.')
@@ -116,3 +136,49 @@ class CoreCommands(commands.Cog):
         result += '```'
 
         await ctx.send(result)
+
+    @commands.command()
+    @commands.cooldown(10, 60)
+    async def impersonate(self, ctx, subject: discord.Member = None):
+        """Reply in the style of another user"""
+
+        # Don't impersonate more than one person at a time on a server
+        if ctx.message.guild.id in self.servers_where_typing:
+            await ctx.author.send('Sorry, I\'m busying impersonating someone else right now. Try again when I\'m done.')
+            return
+
+        # Check if there's a model for that user
+        model_uid = await db_queries.get_latest_markov_model(self.session, ctx, subject)
+        if model_uid:
+
+            sample_response_file = f'{model_uid}-sample-responses.txt'
+
+            # Download the file from S3 and delete it after 5 minutes
+            if not os.path.exists(f'./tmp/{sample_response_file}'):
+                self.s3_client.download_file(config.aws_s3_bucket_prefix, sample_response_file,
+                                             f'./tmp/{sample_response_file}')
+                self.bot.loop.create_task(
+                    self.delete_after_5_min(sample_response_file)
+                )
+
+            # Pick a random response
+            with open(f'./tmp/{sample_response_file}') as f:
+                responses = f.read().split(config.unique_delimiter)
+                res = responses[random.randrange(1000)]
+
+            # Change the bot nickname
+            if subject.nick is None:
+                await ctx.message.guild.me.edit(nick=subject.display_name)
+            else:
+                await ctx.message.guild.me.edit(nick=subject.nick)
+
+            # Type the response
+            self.servers_where_typing.append(ctx.message.guild.id)
+            async with ctx.channel.typing():
+                await asyncio.sleep(len(res) / 5)
+                await ctx.send(res)
+
+            # Cleanup / reset
+            await asyncio.sleep(5)
+            self.servers_where_typing.remove(ctx.message.guild.id)
+            await ctx.message.guild.me.edit(nick='DeepfakeBot')

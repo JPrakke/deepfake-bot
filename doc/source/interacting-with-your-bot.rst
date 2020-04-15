@@ -15,9 +15,9 @@ Only the bot owner will have permission to use this command. When this command i
 
 Parameters
 ``````````
-* ``reply_probability`` - Increase this to make your bot more likely to reply at random. 
-* ``new_conversation_min_wait`` - Minimum time before your bot starts a new conversation. If ``reply_probability`` is 0, no new conversations will be started.
-* ``new_conversation_max_wait`` - Minimum time before your bot starts a new conversation. If ``reply_probability`` is 0, no new conversations will be started.
+* ``reply_probability`` - Increase this to make your bot more likely to reply at random. If 0, your bot will not try to start new conversations.
+* ``new_conversation_min_wait`` - Minimum time before your bot starts a new conversation.
+* ``new_conversation_max_wait`` - Maximum time before your bot starts a new conversation.
 * ``max_sentence_length`` - Maximum number of characters in your bot's replies.
 * ``max_markov_chains`` - Maximum number of Markov chains to attempt to generate per candiate reply. 
 * ``selection_algorithm`` - Can be 'cosine_similarity' or 'match_words'. When replying, this is how your bot will select the best response from its Markov chain candiates.

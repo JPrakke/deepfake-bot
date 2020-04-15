@@ -26,8 +26,8 @@ class ModelCommands(lambda_commands.LambdaCommand):
             f'Request complete!  model_uid: `{model_uid}`. Replying in the style of {subject.name}:'
         )
 
-        for i in range(len(responses)):
-            res = f'**Message {i + 1} of {len(responses)}:**\n'
+        for i in range(10):
+            res = f'**Message {i + 1} of 10:**\n'
             res += f'```{responses[i]}```\n'
             await ctx.message.channel.send(res)
 
@@ -44,7 +44,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
             "filters": filters,
             "state_size": state_size,
             "new_line": new_line,
-            "number_responses": 10
+            "number_responses": 1000
         }
 
         # Invoke the lambda function

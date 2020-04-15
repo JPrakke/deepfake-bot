@@ -1,8 +1,8 @@
 Command List
 ============
 
-Common Commands
----------------
+Core Commands
+-------------
 
 generate
 ````````
@@ -10,6 +10,13 @@ generate
 .. topic:: ``df!generate <@user>``
 
     Runs all of the process steps to create a model.
+
+impersonate
+```````````
+
+.. topic:: ``df!impersonate <@user>``
+
+    Replies in the style of your target user. Requires that a model be generated first.
 
 extract
 ```````
