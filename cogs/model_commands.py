@@ -52,19 +52,21 @@ class ModelCommands(lambda_commands.LambdaCommand):
                                          self.markovify_response, ctx, subject, model_uid)
 
         if not ok:
-            # TODO: add link to documentation
-            await ctx.send(f'Markov chain generator failed for {subject.name}.')
+            await ctx.send(f'Sorry :( Markov chain generator failed for {subject.name}. See here for tips on how to '
+                           'generate a good model: '
+                           'https://deepfake-bot.readthedocs.io/en/latest/model-tuning.html')
         else:
             db_queries.create_markov_model(self.parent_cog.session, data_uid, model_uid)
 
     @commands.group(name='markovify')
     async def markovify(self, ctx):
         """Markov chain generator commands"""
-        pass
+        if ctx.invoked_subcommand is None:
+            await ctx.send('Usage: `df!markovify <generate/newline/state_size/settings>`')
 
     @markovify.command()
     @commands.cooldown(5, 300, type=commands.BucketType.user)
-    async def generate(self, ctx, *, subject: discord.Member):
+    async def generate(self, ctx, *, subject: discord.Member = None):
         """Generates a markov chain model and sample responses in the style of your subject"""
         if subject:
             data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
@@ -74,7 +76,7 @@ class ModelCommands(lambda_commands.LambdaCommand):
                 await ctx.send('Markovify request submitted...')
                 await self.process_markovify(ctx, subject, data_id, filters, state_size, newline)
         else:
-            await ctx.message.channel.send(f'Usage: `df!markovify <User#0000>`')
+            await ctx.send(f'Usage: `df!markovify generate <User#0000>`')
 
     @markovify.group(name='newline')
     @commands.cooldown(10, 60, type=commands.BucketType.user)
@@ -85,35 +87,38 @@ class ModelCommands(lambda_commands.LambdaCommand):
 
     @newline.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def off(self, ctx, *, subject: discord.Member):
+    async def off(self, ctx, *, subject: discord.Member = None):
         if subject:
             state_size, _ = db_queries.get_markov_settings(self.session, ctx, subject)
             db_queries.update_markov_settings(self.session, ctx, subject, state_size, False)
-            await ctx.send(f'markovify newline off for user {subject.name}')
+            await ctx.send(f'Markovify newline off for user {subject.name}')
         else:
             await ctx.send('Usage: `df!markovify newline off <User#0000>`')
 
     @newline.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def on(self, ctx, *, subject: discord.Member):
+    async def on(self, ctx, *, subject: discord.Member = None):
         if subject:
             state_size, _ = db_queries.get_markov_settings(self.session, ctx, subject)
             db_queries.update_markov_settings(self.session, ctx, subject, state_size, True)
-            await ctx.send(f'markovify newline on for user {subject.name}')
+            await ctx.send(f'Markovify newline on for user {subject.name}')
         else:
             await ctx.send('Usage: `df!markovify newline on <User#0000>`')
 
     @markovify.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def state_size(self, ctx, subject: discord.Member, new_value: int):
+    async def state_size(self, ctx, subject: discord.Member = None, new_value: int = None):
         """Changes the state size. Default value is 3. Smaller values tend to generate more chaotic sentences."""
-        old_value, newline = db_queries.get_markov_settings(self.session, ctx, subject)
-        db_queries.update_markov_settings(self.session, ctx, subject, new_value, newline)
-        await ctx.send(f'Markovify state size changed from {old_value} to {new_value} for {subject.name}')
+        if subject and new_value:
+            old_value, newline = db_queries.get_markov_settings(self.session, ctx, subject)
+            db_queries.update_markov_settings(self.session, ctx, subject, new_value, newline)
+            await ctx.send(f'Markovify state size changed from {old_value} to {new_value} for {subject.name}')
+        else:
+            await ctx.send('Usage: `df!markovify state_size <User#0000> <value>`')
 
     @markovify.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def settings(self, ctx, *, subject: discord.Member):
+    async def settings(self, ctx, *, subject: discord.Member = None):
         """Displays the current markovify settings."""
         if subject:
             state_size, newline = db_queries.get_markov_settings(self.session, ctx, subject)

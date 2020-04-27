@@ -1,9 +1,11 @@
 Model Tuning
 ============
 
-It might be that your model works perfectly on the first attempt. If not, there are a couple strategies to try. The best thing you can do is 
-ensure that there is enough data, i.e. you have at least a few hundred quality messages of your subject on your server. Also, make sure 
-DeepfakeBot can read all of the relevant channels.
+`"The bot failed to generate a model for me. Now what?"`
+
+If this happens, the first question you ask should be "is the bot seeing enough data?" You will likely need at least a
+few hundred quality messages of your subject on your server for this to work. If however, you know there's enough good
+data on your server and you find it isn't working, there are still a couple strategies to try.
 
 Filtering
 ---------
@@ -12,9 +14,9 @@ To apply a filter use:
 ``df!filter add <@user> <word>``
 
 Any messages containing your filter word will be ignored when generating another model. A common filter might be a bot command or prefix. Refer 
-to the wordcloud image for other problematic words to filter.
-
-.. tip:: Add ``@UNKOWN_USER`` as a filter.
+to the wordcloud image for other problematic words to filter. You might also want to try removing filters. When you
+extract a data set, the bot will try to guess some filters to use. You can remove these with ``df!filter remove`` or
+``df!filter clear_all``.
 
 Markovify Settings
 ------------------

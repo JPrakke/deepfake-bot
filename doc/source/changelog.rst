@@ -4,6 +4,12 @@ Change Log
 Releases
 --------
 
+1.2.2
+`````
+* Made all commands respond with 'Usage' message if the wrong arguments are given
+* Added a link to Model Tuning documentation when model generation fails
+* Made auto filters be at least two characters long
+
 1.2.1
 `````
 * Added ``impersonate`` command to DeepfakeBot
@@ -14,7 +20,7 @@ Releases
 * Added a message to new users with a link to documentation
 * Training subjects are now linked to trainers - i.e. other users can't mess with your filters or model settings
 * Changed S3 expiration time to 30 days
-* Added auto filters for extract task, added direct message when extracion task finishes
+* Added auto filters for extract task, added direct message when extraction task finishes
 * Added ``newsletter`` command
 * Added cooldowns to commands
 * Documentation updates: added interacting-with-your-bot page, added notes for Plexi users, added changelog

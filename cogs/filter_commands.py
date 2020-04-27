@@ -18,11 +18,17 @@ class FilterCommands(commands.Cog):
     async def filter(self, ctx):
         """Text filter functions for removing bad data from your subject's chat history."""
         if ctx.invoked_subcommand is None:
-            await ctx.send('')
+            await ctx.send('Usage: `df!filter <add/remove/show/clear_all>`')
 
     @filter.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def add(self, ctx, subject: discord.Member, word_to_add):
+    async def add(self, ctx, subject: discord.Member = None, word_to_add = None):
+        """Adds a filter to use for your subject"""
+
+        if subject is None or word_to_add is None:
+            await ctx.send('Usage: `df!filter add <@User#0000> <word>`')
+            return
+
         if len(word_to_add) < 256:
             db_queries.add_a_filter(self.session, ctx, subject, word_to_add)
             await ctx.send(f'Added text filter `{word_to_add}` to `{subject.name}` for this server.')
@@ -31,7 +37,13 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def remove(self, ctx, subject: discord.Member, word_to_drop):
+    async def remove(self, ctx, subject: discord.Member = None, word_to_drop = None):
+        """Removes a filter for your subject"""
+
+        if subject is None or word_to_drop is None:
+            await ctx.send('Usage: `df!filter remove <@User#0000> <word>`')
+            return
+
         found_word = db_queries.remove_a_filter(self.session, ctx, subject, word_to_drop)
         if found_word:
             await ctx.send(f'Removed text filter `{word_to_drop}` from `{subject.name}` for this server.')
@@ -40,7 +52,13 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def show(self, ctx, subject: discord.Member):
+    async def show(self, ctx, *, subject: discord.Member = None):
+        """Displays all the current filters applied to your subject"""
+
+        if subject is None:
+            await ctx.send('Usage: `df!filter show <@User#0001>`')
+            return
+
         found_filters = db_queries.find_filters(self.session, ctx, subject)
         if len(found_filters) > 0:
             n = '\n'
@@ -50,6 +68,12 @@ class FilterCommands(commands.Cog):
 
     @filter.command()
     @commands.cooldown(10, 60, type=commands.BucketType.user)
-    async def clear_all(self, ctx, subject: discord.Member):
+    async def clear_all(self, ctx, *, subject: discord.Member = None):
+        """Removes all the current filters for your subject"""
+
+        if subject is None:
+            await ctx.send('Usage: `df!filter clear_all <@User#0001>`')
+            return
+
         db_queries.clear_filters(self.session, ctx, subject)
         await ctx.send(f'Text filters removed for `{subject.name}` on this server.')

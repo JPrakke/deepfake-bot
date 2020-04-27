@@ -53,7 +53,7 @@ def find_common_prefixes(filters):
         min_idx = sys.maxsize
         for p in suspicious_characters:
             idx = fil.find(p)
-            if (idx > -1) and (idx < min_idx):
+            if (idx > -1) and (idx < min_idx) and (idx > 0):
                 min_idx = idx
 
         common_prefixes.append(fil[:min_idx+1])

@@ -142,6 +142,10 @@ class CoreCommands(commands.Cog):
     async def impersonate(self, ctx, subject: discord.Member = None):
         """Reply in the style of another user"""
 
+        if subject is None:
+            await ctx.send('Usage: `df!impersonate <@User#0000>`')
+            return
+
         # Don't impersonate more than one person at a time on a server
         if ctx.message.guild.id in self.servers_where_typing:
             await ctx.author.send('Sorry, I\'m busying impersonating someone else right now. Try again when I\'m done.')

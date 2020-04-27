@@ -110,7 +110,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
 
     @commands.command()
     @commands.cooldown(10, 300, type=commands.BucketType.user)
-    async def wordcloud(self, ctx, *, subject: discord.Member):
+    async def wordcloud(self, ctx, *, subject: discord.Member = None):
         """Uploads a wordcloud image if a data set exists for the mentioned subject"""
         if subject:
             data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
@@ -123,7 +123,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
 
     @commands.command()
     @commands.cooldown(10, 300, type=commands.BucketType.user)
-    async def dirtywordcloud(self, ctx, *, subject: discord.Member):
+    async def dirtywordcloud(self, ctx, *, subject: discord.Member = None):
         """Uploads a wordcloud image of curse words if a dataset has been extracted for the mentioned subject"""
         if subject:
             data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
@@ -136,7 +136,7 @@ class PlotCommands(lambda_commands.LambdaCommand):
 
     @commands.command()
     @commands.cooldown(10, 300, type=commands.BucketType.user)
-    async def activity(self, ctx, *, subject: discord.Member):
+    async def activity(self, ctx, *, subject: discord.Member = None):
         """Uploads time series and pie charts image if a data set exists for the mentioned subject"""
         if subject:
             data_id = await db_queries.get_latest_dataset(self.session, ctx, subject)
