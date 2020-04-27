@@ -3,7 +3,7 @@
 
 MAJOR_VERSION=1 # <---to make a major or minor release these should be edited and committed
 MINOR_VERSION=2
-PATCH_VERSION=2
+PATCH_VERSION=3
 
 # BUILD -- Copy the version number from this file into config.py then zip the needed files.
 
