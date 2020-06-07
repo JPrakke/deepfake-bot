@@ -8,7 +8,9 @@ To host your bot you will need:
 
 1. A `Discord <https://discordapp.com/developers/>`_ developer account.
 2. A `Github <https://github.com>`_ account. You won't need to do any actual coding for this.
-3. A `Heroku <https://heroku.com/>`_ account. You can do this using only free resources but you should verify your account.
+3. A `Heroku <https://heroku.com/>`_ account. You can do this using only free resources but you will need to enter a credit card.
+
+If you don't want to use Heroku you can also try :ref:`Deploying Locally`. 
 
 Deployment Steps
 ----------------
@@ -91,3 +93,23 @@ You should see something like this eventually:
     2019-11-24T21:24:19.779863+00:00 app[worker.1]: INFO:cogs.config_cog:<id>
 
 That's it! Your bot is up and running. Now go add it to your Discord server.
+
+.. _Deploying Locally:
+
+Deploying Locally
+-----------------
+
+If you'd like to run your bot without using Heroku or having to enter your credit card information, you can do the following:
+
+1. Clone or download the ``self-deployment`` branch of your repository.
+2. Install a python distribution. I recommend `this <https://docs.conda.io/en/latest/miniconda.html>`_ one. 
+3. Create and activate an `environment <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_ for your bot application. Then install the needed python packages with: ``pip install -r requirements.txt``
+4. Add your model artifacts (.gz and .json files) to the ``./deepfake-bot/tmp`` folder (instead of Cloudcube).
+5. Create another file in ``./deepfake-bot/tmp`` called ``secrets.json`` (instead of using environment variables).
+6. Add ``DEEPFAKE_MODEL_UID_1`` ... and so forth to it. When you're done, it should look similar to this:
+
+.. image:: https://deepfake-discord-bot-permanent.s3.us-east-1.amazonaws.com/sample_secrets.PNG
+
+7. Start your bot(s) with: ``python app.py --local``
+
+Enjoy!
