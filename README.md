@@ -1,13 +1,16 @@
 # DeepfakeBot
 
+UPDATE (2021): This was a fun project but unfortunately there hasn't been enough interest in it to justify my AWS bill. So I've decided to take the bot down. Thank  you to everyone who used it. And thank you for all of the (mostly) positive feedback.
+
+---
 Make copies of your friends! Using the magic of cloud computing, [Markov](https://github.com/jsvine/markovify) chains and a little data analytics, you can create a bot that sounds like another discord user.
 
 ## Users
 
-* [Add](https://discordapp.com/oauth2/authorize?client_id=551871268090019945&scope=bot&permissions=117760) the bot to your Discord server.
+* [~~Add~~]() the bot to your Discord server.
 * [Read](https://deepfake-bot.readthedocs.io/) about how to use it.
-* Get [help](https://discord.gg/JGudz9G) with your bot if you get stuck. 
-* [Donate](https://www.patreon.com/rustygentile) to keep the bot up and running.
+* Get [~~help~~]() with your bot if you get stuck. 
+* [~~Donate~~]() to keep the bot up and running.
 
 ## Developers
 
